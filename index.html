@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C Mastery - Kompletní Průvodce</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+<style>
+    :root { 
+        --primary: #4361ee;       /* Hlavní modrá */
+        --accent: #4cc9f0;        /* Světle modrá na detaily */
+        --nav-bg: #f8f9fa;        /* Světle šedé pozadí menu */
+        --nav-text: #4a5568;      /* Šedý text v menu */
+        --text-dark: #2d3748;     /* Téměř černá pro text v obsahu */
+        --bg-main: #ffffff;       /* Bílé pozadí obsahu */
+        --border: #e2e8f0;        /* Barva linek a ohraničení */
+    }
+
+    body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        line-height: 1.6; 
+        margin: 0; 
+        display: flex; 
+        background: var(--bg-main); 
+        color: var(--text-dark); 
+    }
+    
+    /* Navigace - Světlá a čistá */
+    nav { 
+        width: 280px; 
+        background: var(--nav-bg); 
+        height: 100vh; 
+        position: fixed; 
+        padding: 30px 20px; 
+        border-right: 1px solid var(--border);
+        overflow-y: auto; 
+    }
+
+    nav h2 { 
+        font-size: 1.2rem; 
+        color: var(--text-dark); 
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 25px;
+        padding-left: 10px;
+        border-left: 4px solid var(--primary);
+    }
+
+    nav ul { list-style: none; padding: 0; margin: 0; }
+    
+    nav li { margin-bottom: 5px; }
+
+    nav a { 
+        text-decoration: none; 
+        color: var(--nav-text); 
+        font-size: 0.95rem; 
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: block;
+        transition: all 0.2s ease;
+    }
+
+    nav a:hover { 
+        background: var(--border); 
+        color: var(--primary); 
+        transform: translateX(5px); 
+    }
+
+    /* Hlavní plocha */
+    main { 
+        margin-left: 320px; 
+        padding: 60px 40px; 
+        max-width: 850px; 
+    }
+
+    h1 { 
+        font-size: 2.8rem; 
+        color: var(--text-dark); 
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+
+    h2 { 
+        font-size: 1.8rem; 
+        color: var(--primary); 
+        margin-top: 50px; 
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--nav-bg);
+    }
+
+    h3 { 
+        font-size: 1.3rem;
+        color: var(--text-dark); 
+        margin-top: 30px; 
+    }
+    
+    /* Karty a poznámky */
+    .note { 
+        background: #ebf4ff; 
+        border-left: 4px solid var(--primary); 
+        padding: 20px; 
+        margin: 25px 0; 
+        border-radius: 0 8px 8px 0; 
+        font-size: 0.95rem;
+    }
+
+    .warning { 
+        background: #fffaf0; 
+        border-left: 4px solid #ed8936; 
+        padding: 20px; 
+        margin: 25px 0; 
+        border-radius: 0 8px 8px 0; 
+        font-size: 0.95rem;
+    }
+
+    /* Responzivita */
+    @media (max-width: 1100px) {
+        body { flex-direction: column; }
+        nav { 
+            width: 100%; 
+            height: auto; 
+            position: relative; 
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+        }
+        main { margin-left: 0; padding: 30px 20px; }
+    }
+
+    /* Vylepšení vzhledu kódu */
+    pre[class*="language-"] {
+        border-radius: 12px !important;
+        margin: 20px 0 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+</style>
+
+</head>
+<body>
+
+    <nav>
+        <h2> REV C Reference</h2>
+        <ul>
+            <li><a href="#intro">1. První program</a></li>
+            <li><a href="#types">2. Datové typy</a></li>
+            <li><a href="#logic">3. Podmínky (If/Switch)</a></li>
+            <li><a href="#loops">4. Cykly (While, For, Do-While)</a></li>
+            <li><a href="#functions">5. Funkce (Deklarace/Definice)</a></li>
+            <li><a href="#pointers">6. Pointery a argumenty</a></li>
+            <li><a href="#arrays">7. Pole a Řetězce</a></li>
+            <li><a href="#structs">8. Struktury a Typedef</a></li>
+            <li><a href="#enum-union">9. Enum a Union</a></li>
+            <li><a href="#preprocessor">10. Makra a Preprocesor</a></li>
+            <li><a href="#malloc">11. Dynamická paměť</a></li>
+			<li><a href="#multi-file">12. Více souborů</a></li>
+        </ul>
+    </nav>
+
+    <main>
+		<section id="intro">
+			<h2>1. První program a struktura kódu</h2>
+
+			<h3>Knihovna standardního vstupu a výstupu</h3>
+			<p>
+				Na úplném začátku vidíme <code>#include &lt;stdio.h&gt;</code>. To není příkaz pro procesor, ale pro tzv. <strong>preprocesor</strong>. 
+				Říkáme tím: "Vezmi obsah souboru <code>stdio.h</code> a vlož ho sem." Tento soubor obsahuje definici funkce <code>printf</code>, 
+				bez které bychom nemohli nic vypsat na obrazovku.
+			</p>
+
+			<h3>Funkce main: Vstupní brána</h3>
+			<p>
+				Funkce <code>int main()</code> je tzv. <strong>entry point</strong> (vstupní bod). Když spustíte program, operační systém začne 
+				vykonávat kód právě od prvního řádku uvnitř složených závorek této funkce.
+			</p>
+			
+			<div class="note">
+				V celém projektu může být funkce <code>main</code> pouze <strong>jednou</strong>. 
+				Kdyby jich bylo víc, počítač by nevěděl, kterou má začít dřív a nahlásil by chybu při linkování.
+			</div>
+
+			<h3>Ukázkový kód</h3>
+			<pre><code class="language-c">#include &lt;stdio.h&gt; // Nutné pro printf
+
+// Hlavní funkce - mozek celého programu
+int main() {
+	// printf vypisuje text. \n vytvoří nový řádek.
+	printf("Ahoj, toto je můj první program v C!\n");
+
+	// return 0 říká systému: "Vše proběhlo v pořádku."
+	return 0;
+}</code></pre>
+
+			<h3>Klíčové pojmy k zapamatování:</h3>
+			<ul>
+				<li><code>#include</code> – připojuje externí nástroje (knihovny).</li>
+				<li><code>stdio.h</code> – zkratka pro <i>Standard Input/Output</i>.</li>
+				<li><code>main</code> – místo, kde program startuje.</li>
+				<li><code>;</code> (středník) – každý příkaz v C musí končit středníkem!</li>
+			</ul>
+		</section>
+
+<section id="types">
+    <h2>2. Datové typy, Unsigned a Formátování</h2>
+    <p>
+        Proměnná je pojmenované místo v paměti. V C rozlišujeme základní typy a typy s pevnou šířkou, u kterých máme jistotu, kolik bitů v paměti zabírají.
+    </p>
+
+    <h3>1. Přehled typů a jejich rozsahů</h3>
+    <table border="1" style="width:100%; border-collapse: collapse; margin: 20px 0;">
+        <tr style="background-color: #f2f2f2;">
+            <th style="padding: 10px;">Základní typ</th>
+            <th style="padding: 10px;">Precizní typ (stdint.h)</th>
+            <th style="padding: 10px;">Popis</th>
+            <th style="padding: 10px;">Značka (printf)</th>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><code>char</code></td>
+            <td style="padding: 10px;"><code>int8_t / uint8_t</code></td>
+            <td style="padding: 10px;">Znak nebo 1-bajtové číslo</td>
+            <td style="padding: 10px;"><code>%c</code> (znak), <code>%d</code> (číslo)</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><code>int</code></td>
+            <td style="padding: 10px;"><code>int32_t / uint32_t</code></td>
+            <td style="padding: 10px;">Celé číslo (4 bajty)</td>
+            <td style="padding: 10px;"><code>%d</code> (signed), <code>%u</code> (unsigned)</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><code>long long</code></td>
+            <td style="padding: 10px;"><code>int64_t / uint64_t</code></td>
+            <td style="padding: 10px;">Velké celé číslo (8 bajtů)</td>
+            <td style="padding: 10px;"><code>%lld</code>, <code>%llu</code></td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><code>float</code></td>
+            <td style="padding: 10px;">—</td>
+            <td style="padding: 10px;">Desetinné číslo (4 bajty)</td>
+            <td style="padding: 10px;"><code>%f</code></td>
+        </tr>
+        <tr>
+            <td style="padding: 10px;"><code>double</code></td>
+            <td style="padding: 10px;">—</td>
+            <td style="padding: 10px;">Desetinné (vysoká přesnost)</td>
+            <td style="padding: 10px;"><code>%lf</code></td>
+        </tr>
+    </table>
+
+    
+
+    <h3>2. Formátovací značky v printf</h3>
+    <p>
+        Funkce <code>printf</code> používá zástupné symboly začínající <code>%</code>, které jsou při výpisu nahrazeny skutečnou hodnotou proměnné.
+    </p>
+    <ul>
+        <li><strong>%d</strong> (Decimal): Pro celá čísla se znaménkem.</li>
+        <li><strong>%u</strong> (Unsigned): Pro nezáporná celá čísla.</li>
+        <li><strong>%f</strong> (Float): Pro desetinná čísla. Lze omezit počet míst: <code>%.2f</code> vypíše jen dvě.</li>
+        <li><strong>%x</strong> (Hexadecimal): Vypíše číslo v šestnáctkové soustavě (např. barvy, adresy).</li>
+        <li><strong>%p</strong> (Pointer): Vypíše adresu paměti, na kterou pointer ukazuje.</li>
+    </ul>
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+int main() {
+    uint8_t vek = 25;
+    float vaha = 75.5432f;
+    uint32_t ip_adresa = 0xC0A80101; // Hexadecimální zápis
+
+    // Výpis s různým formátováním
+    printf("Věk: %u let\n", vek);
+    
+    // Omezení desetinných míst na 2
+    printf("Váha: %.2f kg\n", vaha);
+    
+    // Výpis stejného čísla desítkově a šestnáctkově
+    printf("IP (dec): %u\n", ip_adresa);
+    printf("IP (hex): 0x%X\n", ip_adresa);
+
+    return 0;
+}</code></pre>
+
+    <div class="note">
+        <strong>Proč je to důležité?</strong> Pokud použijete špatnou značku (např. <code>%d</code> pro 64-bitové číslo), program sice nespadne, ale vypíše úplný nesmysl, protože přečte jen polovinu bitů z paměti.
+    </div>
+</section>
+
+<section id="logic">
+    <h2>3. Podmínky (If, Else, Switch)</h2>
+    <p>
+        Základem rozhodování v C je výraz, který je buď <strong>pravdivý</strong> (true), nebo <strong>nepravdivý</strong> (false). 
+        Zajímavostí je, že v C neexistuje speciální typ pro pravdu – jakékoliv číslo <strong>různé od nuly</strong> je bráno jako pravda, 
+        pouze <strong>nula</strong> je nepravda.
+    </p>
+
+    <h3>Konstrukce If - Else</h3>
+    <p>
+        Toto je nejčastější způsob větvení. Pokud je podmínka v závorkách splněna, provede se první blok kódu. 
+        V opačném případě se provede blok <code>else</code>.
+    </p>
+
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main() {
+    int skore = 85;
+
+    if (skore >= 90) {
+        printf("Výborně, máš jedničku!\n");
+    } 
+    else if (skore >= 80) {
+        printf("Skvěle, máš dvojku.\n");
+    } 
+    else {
+        printf("Musíš víc trénovat.\n");
+    }
+
+    return 0;
+}</code></pre>
+
+    
+
+    <h3>Přepínač Switch</h3>
+    <p>
+        Pokud porovnáváme jednu proměnnou s mnoha konkrétními hodnotami (např. volba v menu), je <code>switch</code> mnohem přehlednější než hromada <code>if-else</code>.
+    </p>
+
+    <div class="warning">
+        <strong>Pozor na break:</strong> Nezapomeň na příkaz <code>break</code> za každým případem (case). 
+        Bez něj by program "propadl" a vykonal by i všechny následující případy!
+    </div>
+
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main() {
+    int volba = 2;
+
+    switch (volba) {
+        case 1:
+            printf("Spouštím novou hru...\n");
+            break;
+        case 2:
+            printf("Načítám uloženou pozici...\n");
+            break;
+        case 3:
+            printf("Končím program.\n");
+            break;
+        default:
+            printf("Neplatná volba!\n");
+    }
+
+    return 0;
+}</code></pre>
+
+    <h3>Logické operátory</h3>
+    <p>
+        V podmínkách často potřebujeme kombinovat více otázek najednou:
+    </p>
+    <ul>
+        <li><code>&&</code> (Logické A) – obě podmínky musí být pravdivé.</li>
+        <li><code>||</code> (Logické NEBO) – alespoň jedna podmínka musí být pravdivá.</li>
+        <li><code>!</code> (Negace) – obrátí pravdivost (z pravdy udělá nepravdu).</li>
+    </ul>
+</section>
+
+<section id="loops">
+    <h2>4. Cykly (While, For, Do-While)</h2>
+    <p>
+        Cykly nám umožňují spouštět stejný blok kódu znovu a znovu. Každý cyklus potřebuje 
+        <strong>podmínku</strong> – jakmile přestane platit, cyklus skončí. Pokud podmínka 
+        nikdy nepřestane platit, vznikne tzv. <i>nekonečná smyčka</i>, která může zaseknout program.
+    </p>
+
+    <h3>1. Cyklus While (Dokud platí...)</h3>
+    <p>
+        Tento cyklus se používá, když dopředu nevíme, kolikrát přesně se kód provede. 
+        Podmínka se kontroluje <strong>před</strong> každým opakováním.
+    </p>
+    <pre><code class="language-c">int i = 0;
+while (i < 3) {
+    printf("i je nyní: %d\n", i);
+    i++; // Důležité: musíme i zvětšit, jinak cyklus nikdy neskončí!
+}</code></pre>
+
+    <h3>2. Cyklus For (Pro daný počet...)</h3>
+    <p>
+        Nejoblíbenější cyklus pro situace, kdy přesně víme, kolikrát chceme kód spustit. 
+        Všechno podstatné (start, podmínka, změna) máme na jednom řádku v závorce.
+    </p>
+    <pre><code class="language-c">// for(start; podmínka; krok)
+for (int i = 0; i < 5; i++) {
+    printf("Ahoj z cyklu for, číslo %d\n", i);
+}</code></pre>
+
+    
+
+[Image of flowchart of a for loop]
+
+
+    <h3>3. Cyklus Do-While (Udělej a pak se ptej)</h3>
+    <p>
+        Tento cyklus je speciální. Podmínka se kontroluje až <strong>po</strong> vykonání kódu. 
+        To znamená, že kód uvnitř se provede <strong>vždy minimálně jednou</strong>, 
+        i kdyby podmínka byla hned od začátku neplatná.
+    </p>
+    <div class="note">
+        <strong>Všimni si:</strong> Na konci <code>while (podminka);</code> u do-while musí být <strong>středník</strong>!
+    </div>
+    <pre><code class="language-c">int j = 10;
+do {
+    printf("Tento text uvidíš aspoň jednou, i když j není menší než 5.\n");
+    j++;
+} while (j < 5);</code></pre>
+
+    <h3>Příkazy Break a Continue</h3>
+    <ul>
+        <li><code>break</code> – okamžitě ukončí celý cyklus a vyskočí z něj ven.</li>
+        <li><code>continue</code> – přeskočí zbytek kódu v aktuálním kole a skočí rovnou na další opakování (znovu zkontroluje podmínku).</li>
+    </ul>
+</section>
+
+<section id="functions">
+    <h2>5. Funkce: Deklarace a Definice</h2>
+    <p>
+        Představte si funkci jako černou skříňku: něco do ní vložíte (argumenty), ona něco provede a výsledek vám vrátí (návratová hodnota).
+        V jazyce C však platí přísné pravidlo: <strong>Kompilátor musí o funkci vědět dříve, než ji poprvé zavoláte.</strong>
+    </p>
+
+    <h3>Rozdíl mezi Deklarací a Definicí</h3>
+    <p>
+        Protože C čte kód odshora dolů, máme dvě možnosti, jak se s funkcemi vypořádat:
+    </p>
+    
+    <ul>
+        <li><strong>Deklarace (Prototyp):</strong> Krátký řádek nad funkcí <code>main</code>. Říká: "Někde v programu existuje funkce s tímto jménem a těmito parametry."</li>
+        <li><strong>Definice:</strong> Samotný kód funkce (tělo se složenými závorkami), který obvykle píšeme až pod <code>main</code>, aby nepřekážel.</li>
+    </ul>
+
+    
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+// 1. DEKLARACE (Prototyp) - říkáme, že funkce existuje
+int secti_cisla(int a, int b);
+
+int main() {
+    // Volání funkce
+    int vysledek = secti_cisla(10, 20);
+    printf("Součet je: %d\n", vysledek);
+    
+    return 0;
+}
+
+// 2. DEFINICE - samotný vnitřek funkce
+int secti_cisla(int a, int b) {
+    int soucet = a + b;
+    return soucet; // Vracíme výsledek zpět do main
+}</code></pre>
+
+    <div class="note">
+        <strong>Typ VOID:</strong> Pokud funkce nemá nic vracet (například jen něco vypíše), používáme jako návratový typ klíčové slovo <code>void</code>.
+    </div>
+
+    <h3>Proč to tak dělat?</h3>
+    <p>
+        Možná se ptáte, proč funkci nenapsat rovnou nad <code>main</code>. U malých programů to jde, ale u velkých projektů, které mají stovky funkcí, byste se v kódu ztratili. 
+        Deklarace nám umožňují mít na začátku souboru přehledný seznam všech funkcí ("obsah"), zatímco detaily jsou schované dole.
+    </p>
+</section>
+
+<section id="pointers">
+    <h2>6. Pointery (Ukazatele) a argumenty funkcí</h2>
+    <p>
+        Pointer není nic jiného než proměnná, která v sobě drží <strong>adresu v paměti</strong> jiné proměnné. 
+        Představte si paměť jako ulici s domy (buňkami). Každý dům má svou adresu (číslo) a uvnitř něj bydlí hodnota (např. číslo 42).
+    </p>
+
+    <h3>Dva klíčové operátory</h3>
+    <ul>
+        <li><code>&</code> (Adresní operátor) – "Získej adresu této proměnné".</li>
+        <li><code>*</code> (Dereferenční operátor) – "Běž na adresu, kterou drží pointer, a ukaž mi, co je uvnitř".</li>
+    </ul>
+
+    
+
+    <h3>Předávání argumentů: Hodnotou vs. Odkazem</h3>
+    <p>
+        V C se standardně do funkcí posílá <strong>kopie</strong> hodnoty. Pokud funkci pošlete číslo a ona ho změní, v původním místě se nic nestane. 
+        Pokud ale pošlete <strong>pointer</strong> (adresu), funkce může "přijít k vám domů" a změnit hodnotu přímo u vás.
+    </p>
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+// Funkce přijímá POINTER na celé číslo
+void vymen_hodnotu(int *p_cislo) {
+    *p_cislo = 99; // Jdeme na adresu a přepíšeme hodnotu na 99
+}
+
+int main() {
+    int moje_cislo = 10;
+    
+    printf("Před funkcí: %d\n", moje_cislo);
+
+    // Volání funkce - musíme poslat ADRESU pomocí operátoru &
+    vymen_hodnotu(&moje_cislo);
+
+    printf("Po funkci: %d\n", moje_cislo); // Vypíše 99!
+    
+    return 0;
+}</code></pre>
+
+    <div class="note">
+        <strong>Proč je to důležité?</strong> Představte si, že máte obrovskou strukturu dat (třeba 1 GB). Kdybyste ji posílali "hodnotou", počítač by musel celých 1 GB zkopírovat, což je pomalé. S pointerem pošlete jen 8 bajtů (adresu) a je to!
+    </div>
+
+    <h3>Nulový pointer (NULL)</h3>
+    <p>
+        Je dobrým zvykem nastavit pointer na <code>NULL</code>, pokud zrovna nikam neukazuje. 
+        Je to jako říct: "Tento ukazatel teď nevede k žádnému domu." Předejdete tím pádům programu.
+    </p>
+</section>
+
+<section id="arrays">
+    <h2>7. Pole a Řetězce</h2>
+    <p>
+        <strong>Pole</strong> (Array) je souvislý blok paměti, kde jsou jednotlivé prvky naskládány těsně za sebou. 
+        V C musíme při vytváření pole říct, jak bude velké, a toto číslo se už později nemůže změnit.
+    </p>
+
+    <h3>Indexování: Začínáme od nuly!</h3>
+    <p>
+        Důležité pravidlo: první prvek v poli má vždy index <code>0</code>. Pokud má pole 5 prvků, poslední prvek má index <code>4</code>.
+    </p>
+
+    
+
+    <h3>Řetězce (Strings)</h3>
+    <p>
+        Jazyk C nemá vestavěný typ "String" jako moderní jazyky. Řetězec je v C jednoduše <strong>pole znaků (char)</strong>. 
+        Aby počítač věděl, kde text končí, přidává se na konec speciální neviditelný znak <code>\0</code> (tzv. null terminator).
+    </p>
+
+    <div class="note">
+        <strong>Pozor na velikost:</strong> Pokud chceš uložit slovo "Ahoj" (4 písmena), potřebuješ pole o velikosti minimálně 5, aby se tam vešel i ukončovací znak <code>\0</code>.
+    </div>
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+// Funkce pro výpis pole - musíme poslat pole a jeho velikost!
+void tiskni_pole(int *p, int velikost) {
+    for (int i = 0; i < velikost; i++) {
+        printf("%d ", p[i]); // k prvkům přistupujeme přes index [i]
+    }
+    printf("\n");
+}
+
+int main() {
+    // 1. Pole čísel
+    int cisla[3] = {10, 20, 30};
+    tiskni_pole(cisla, 3);
+
+    // 2. Řetězec
+    char pozdrav[] = "Ahoj"; // C automaticky spočítá délku a přidá \0
+    printf("Pozdrav: %s\n", pozdrav); // %s slouží pro výpis řetězců
+
+    return 0;
+}</code></pre>
+
+    <h3>Pole jako argument funkce</h3>
+    <p>
+        Všimni si funkce <code>tiskni_pole</code>. Do argumentu píšeme <code>int *p</code>. 
+        To proto, že pole se do funkce <strong>vždy předává jako pointer</strong> na svůj první prvek. 
+        Protože pointer sám o sobě neví, jak je pole dlouhé, musíme jako druhý argument poslat i <strong>velikost</strong>.
+    </p>
+</section>
+
+<section id="structs">
+    <h2>8. Struktury (Struct) a Typedef</h2>
+    <p>
+        <strong>Struktura</strong> umožňuje definovat nový datový typ, který v sobě obsahuje několik dalších proměnných (tzv. členy struktury). 
+        Zatímco pole obsahuje prvky <i>stejného</i> typu, struktura může míchat <code>int</code>, <code>char</code>, <code>float</code> atd.
+    </p>
+
+    <h3>Klíčové slovo typedef</h3>
+    <p>
+        Standardně bychom v C museli před každou proměnnou psát <code>struct MojeStruktura</code>. 
+        Díky <code>typedef</code> můžeme struktuře dát krátkou přezdívku, kterou pak používáme jako běžný typ (podobně jako <code>int</code>).
+    </p>
+
+    
+
+    <h3>Operátory Tečka (.) a Šipka (->)</h3>
+    <ul>
+        <li><strong>Tečka <code>.</code></strong> – používáme, když pracujeme s běžnou proměnnou typu struktura.</li>
+        <li><strong>Šipka <code>-></code></strong> – používáme, když máme <strong>pointer</strong> na strukturu. Je to zkratka za <code>(*ptr).clen</code>.</li>
+    </ul>
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+// Definice struktury s přezdívkou "Hrac"
+typedef struct {
+    char jmeno[20];
+    int uroven;
+    float zdravi;
+} Hrac;
+
+int main() {
+    // 1. Vytvoření a naplnění struktury
+    Hrac h1 = {"Bivoj", 5, 100.0f};
+
+    // 2. Práce s pointerem na strukturu
+    Hrac *ptr_hrac = &h1;
+
+    // Přístup přes tečku
+    printf("Hráč: %s (Level %d)\n", h1.jmeno, h1.uroven);
+
+    // Změna hodnoty přes šipku (protože ptr_hrac je pointer)
+    ptr_hrac->uroven = 6;
+    ptr_hrac->zdravi = 95.5f;
+
+    printf("Aktualizovaný level: %d\n", h1.uroven);
+
+    return 0;
+}</code></pre>
+
+    <div class="note">
+        <strong>Proč používat struktury?</strong> Představte si, že píšete hru s 50 nepřáteli. Bez struktur byste museli mít 50 polí pro jména, 50 polí pro zdraví atd. Se strukturou máte prostě jedno pole typu <code>Nepritel</code>.
+    </div>
+</section>
+
+<section id="enum-union">
+    <h2>9. Enum a Union</h2>
+    <p>
+        Zatímco <code>struct</code> dává data k sobě, <code>enum</code> nám pomáhá s čitelností logiky a <code>union</code> šetří místo v paměti tím, že dovoluje uložit různé věci na stejnou adresu.
+    </p>
+
+    <h3>1. Enum (Výčtový typ)</h3>
+    <p>
+        Místo abyste si pamatovali, že <code>0</code> znamená "vypnuto" a <code>1</code> znamená "zapnuto", vytvoříte si <strong>Enum</strong>. 
+        Kompilátor si vnitřně stále pamatuje čísla, ale vy v kódu píšete lidská slova.
+    </p>
+    <pre><code class="language-c">enum StavHry { MENU, HRANI, PAUZA, KONEC };
+
+int main() {
+    enum StavHry aktualni = MENU;
+
+    if (aktualni == MENU) {
+        printf("Zobrazuji hlavní menu...\n");
+    }
+    return 0;
+}</code></pre>
+
+    <h3>2. Union (Sjednocení)</h3>
+    <p>
+        <strong>Union</strong> vypadá jako struktura, ale funguje úplně jinak. Zatímco struktura vyhradí místo pro <strong>všechny</strong> své členy, 
+        Union vyhradí místo jen pro ten <strong>největší</strong> člen. Všechny proměnné uvnitř sdílejí stejnou adresu.
+    </p>
+    
+    <div class="warning">
+        <strong>Pozor:</strong> V Unionu můžete v jeden moment mít uloženu pouze <strong>jednu</strong> věc. Pokud zapíšete do jedné proměnné, přepíšete tím tu druhou!
+    </div>
+
+    
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+typedef union {
+    int cele_cislo;
+    float desetinne_cislo;
+} MojeData;
+
+int main() {
+    MojeData data;
+
+    data.cele_cislo = 10;
+    printf("Int: %d\n", data.cele_cislo);
+
+    data.desetinne_cislo = 3.14f; // Toto PŘEPÍŠE původní int!
+    printf("Float: %.2f\n", data.desetinne_cislo);
+    
+    // Tady už bude nesmysl, protože místo bylo přepsáno floatem
+    printf("Int po přepsání: %d\n", data.cele_cislo); 
+
+    return 0;
+}</code></pre>
+
+    <h3>Kdy co použít?</h3>
+    <ul>
+        <li><strong>Enum</strong>: Kdykoliv máte proměnnou, která může nabývat jen několika konkrétních stavů (např. barvy, dny v týdnu, stavy procesu).</li>
+        <li><strong>Union</strong>: V nízkoúrovňovém programování, když potřebujete interpretovat stejná data různými způsoby nebo když extrémně šetříte pamětí (např. u mikročipů).</li>
+    </ul>
+</section>
+
+<section id="preprocessor">
+    <h2>10. Makra a Preprocesor</h2>
+    <p>
+        Příkazy preprocesoru vždy začínají symbolem <code>#</code>. Nejsou to příkazy, které by počítač vykonával za běhu – jsou to instrukce pro kompilátor, jak má kód "přepsat", než ho začne překládat.
+    </p>
+
+    <h3>1. Definice konstant (#define)</h3>
+    <p>
+        Místo abyste v kódu psali stále dokola <code>3.14159</code>, vytvoříte si makro. Pokud se hodnota změní, opravíte ji jen na jednom místě. 
+        Makra se tradičně píší <strong>VELKÝMI PÍSMENY</strong>.
+    </p>
+    <pre><code class="language-c">#define PI 3.14159
+#define MAX_HRACU 100</code></pre>
+
+    <h3>2. Makra s parametry</h3>
+    <p>
+        Makra mohou fungovat i jako velmi rychlé a jednoduché funkce. Preprocesor prostě "vloží" váš parametr do vzorce.
+    </p>
+    <div class="warning">
+        <strong>Pozor na závorky:</strong> U maker s parametry vždy používejte závorky kolem každého parametru, jinak vás překvapí matematická priorita operací!
+    </div>
+    <pre><code class="language-c">// Správné makro se závorkami
+#define CTVEREC(x) ((x) * (x))
+
+int vysledek = CTVEREC(5); // Přepíše se na ((5) * (5))</code></pre>
+
+    <h3>3. Podmíněný překlad (#ifdef, #ifndef)</h3>
+    <p>
+        Můžete kompilátoru říct, aby část kódu úplně ignoroval, pokud není splněna nějaká podmínka. To se často používá pro ladění (debugování).
+    </p>
+
+    
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+
+// Definice makra pro ladění
+#define DEBUG_MOD 1
+
+int main() {
+    int x = 10;
+
+    #if DEBUG_MOD == 1
+        printf("[DEBUG] Hodnota x je: %d\n", x);
+    #endif
+
+    printf("Program běží...\n");
+
+    return 0;
+}</code></pre>
+
+    <h3>Shrnutí preprocesoru</h3>
+    <ul>
+        <li><code>#include</code> – Vloží obsah jiného souboru (knihovny).</li>
+        <li><code>#define</code> – Vytvoří konstantu nebo textovou náhradu (makro).</li>
+        <li><code>#undef</code> – Zruší dříve definované makro.</li>
+        <li><code>#ifdef / #endif</code> – Zahrne část kódu, jen pokud je makro definováno.</li>
+    </ul>
+</section>
+
+<section id="malloc">
+    <h2>11. Dynamická alokace (malloc, free, realloc)</h2>
+    <p>
+        Všechny proměnné, které jsme dosud dělali, byly na tzv. <strong>zásobníku</strong> (stack). Jejich velikost musela být pevná. 
+        Pokud ale potřebujeme paměť, která se "přizpůsobí" situaci, musíme použít <strong>haldu</strong> (heap).
+    </p>
+
+    <h3>Knihovna stdlib.h</h3>
+    <p>
+        Pro práci s dynamickou pamětí musíme na začátek programu přidat <code>#include &lt;stdlib.h&gt;</code>. 
+        Získáme tím přístup ke čtyřem klíčovým funkcím:
+    </p>
+    <ul>
+        <li><code>malloc(velikost)</code> – Vyhradí blok paměti o dané velikosti v bajtech.</li>
+        <li><code>free(pointer)</code> – Vrátí paměť zpět operačnímu systému.</li>
+        <li><code>calloc</code> – Podobné jako malloc, ale paměť rovnou vynuluje.</li>
+        <li><code>realloc</code> – Změní velikost již vyhrazené paměti (např. nafoukne pole).</li>
+    </ul>
+
+    
+
+    <div class="warning">
+        <strong>Zlaté pravidlo:</strong> Na každý jeden <code>malloc</code> musí v programu existovat jeden <code>free</code>. 
+        Pokud paměť neuvolníte, vzniká <i>Memory Leak</i> (únik paměti) a váš program bude "požírat" RAM, dokud nespadne.
+    </div>
+
+    <h3>Ukázkový kód</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt; // Nutné pro malloc a free
+
+int main() {
+    int n;
+    printf("Kolik čísel chceš uložit? ");
+    scanf("%d", &n);
+
+    // 1. Alokace paměti: chceme n-krát velikost typu int
+    int *pole = (int*) malloc(n * sizeof(int));
+
+    // 2. Kontrola, zda se alokace povedla (paměť může dojít!)
+    if (pole == NULL) {
+        printf("Chyba: Nedostatek paměti!\n");
+        return 1;
+    }
+
+    // 3. Práce s pamětí (úplně stejně jako s polem)
+    for (int i = 0; i < n; i++) {
+        pole[i] = i * 10;
+        printf("%d ", pole[i]);
+    }
+
+    // 4. UVOLNĚNÍ PAMĚTI - extrémně důležité!
+    free(pole);
+    pole = NULL; // Dobrá praxe: nastavit na NULL, aby se pointer nepoužil znovu
+
+    return 0;
+}</code></pre>
+
+    <h3>Funkce sizeof</h3>
+    <p>
+        Všimni si operátoru <code>sizeof(int)</code>. Na každém počítači může být <code>int</code> jinak velký (2, 4 nebo 8 bajtů). 
+        Pomocí <code>sizeof</code> zajistíme, že náš program bude fungovat všude stejně, protože si velikost zjistí sám.
+    </p>
+</section>
+
+<section id="multi-file">
+    <h2>12. Rozdělení kódu (Modularity)</h2>
+    <p>
+        Když program roste, jeden soubor už nestačí. Kód pak můžeme rozdělit na:
+    </p>
+    <ul>
+        <li><strong>Soubory .c (Zdrojové):</strong> Obsahují samotnou logiku a definice funkcí (výkonný kód).</li>
+        <li><strong>Soubory .h (Hlavičkové):</strong> Obsahují deklarace (prototypy) funkcí, makra a struktury, které chceme sdílet.</li>
+    </ul>
+
+    
+
+    <h3>1. Hlavičkový soubor (např. vypocty.h)</h3>
+    <p>
+        Zde říkáme ostatním částem programu, co naše knihovna umí. Používáme tzv. <strong>Header Guards</strong> (<code>#ifndef</code>), aby se soubor do programu nevložil omylem vícekrát.
+    </p>
+    <pre><code class="language-c">// vypocty.h
+#ifndef VYPOCTY_H
+#define VYPOCTY_H
+
+// Pouze prototyp (deklarace)
+int secti(int a, int b);
+
+#endif</code></pre>
+
+    <h3>2. Zdrojový soubor (např. vypocty.c)</h3>
+    <p>
+        Zde napíšeme skutečný vnitřek funkcí. Musíme vložit vlastní hlavičkový soubor, aby kompilátor věděl, že k sobě patří.
+    </p>
+    <pre><code class="language-c">// vypocty.c
+#include "vypocty.h"
+
+int secti(int a, int b) {
+    return a + b;
+}</code></pre>
+
+    <h3>3. Hlavní soubor (main.c)</h3>
+    <p>
+        V hlavním souboru pak stačí vložit hlavičkový soubor. Všimněte si uvozovek <code>" "</code> místo špičatých závorek <code>&lt; &gt;</code> – uvozovky říkají, že soubor má hledat u nás v projektu, ne v systému.
+    </p>
+    <pre><code class="language-c">// main.c
+#include &lt;stdio.h&gt;
+#include "vypocty.h"
+
+int main() {
+    int vysledek = secti(5, 10);
+    printf("Výsledek z jiného souboru: %d\n", vysledek);
+    return 0;
+}</code></pre>
+
+    <div class="note">
+        <strong>Jak to funguje?</strong> Kompilátor nejdříve přeloží každý <code>.c</code> soubor zvlášť do tzv. objektového souboru (<code>.obj</code> nebo <code>.o</code>). Poté nastoupí <strong>Linker</strong>, který tyto kousky vezme a slepí je do jednoho výsledného programu (<code>.exe</code>).
+    </div>
+
+    <h3>Shrnutí výhod</h3>
+    <ul>
+        <li><strong>Přehlednost:</strong> Máte matematiku v jednom souboru, grafiku v druhém.</li>
+        <li><strong>Rychlost:</strong> Při změně v jednom souboru se nemusí znovu kompilovat celý projekt.</li>
+        <li><strong>Znovupoužitelnost:</strong> <code>vypocty.h</code> můžete prostě vzít a vložit do úplně jiného projektu.</li>
+    </ul>
+</section>
+
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+</body>
+</html>
