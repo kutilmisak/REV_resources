@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C Mastery - Kompletní Průvodce</title>
+    <title>REV - C</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     
@@ -184,7 +184,7 @@
 			<h3>Ukázkový kód</h3>
 			<pre><code class="language-c">#include &lt;stdio.h&gt; // Nutné pro printf
 
-// Hlavní funkce - mozek celého programu
+// Hlavní funkce
 int main() {
 	// printf vypisuje text. \n vytvoří nový řádek.
 	printf("Ahoj, toto je muj prvni program v C!\n");
@@ -217,19 +217,19 @@ int main() {
             <th style="padding: 10px;">Značka (printf)</th>
         </tr>
         <tr>
-            <td style="padding: 10px;"><code>char</code></td>
+            <td style="padding: 10px;"><code>(unsigned)char</code></td>
             <td style="padding: 10px;"><code>int8_t / uint8_t</code></td>
             <td style="padding: 10px;">Znak nebo 1-bajtové číslo</td>
             <td style="padding: 10px;"><code>%c</code> (znak), <code>%d</code> (číslo)</td>
         </tr>
         <tr>
-            <td style="padding: 10px;"><code>int</code></td>
+            <td style="padding: 10px;"><code>(unsigned)int</code></td>
             <td style="padding: 10px;"><code>int32_t / uint32_t</code></td>
             <td style="padding: 10px;">Celé číslo (4 bajty)</td>
             <td style="padding: 10px;"><code>%d</code> (signed), <code>%u</code> (unsigned)</td>
         </tr>
         <tr>
-            <td style="padding: 10px;"><code>long long</code></td>
+            <td style="padding: 10px;"><code>(unsigned)long long</code></td>
             <td style="padding: 10px;"><code>int64_t / uint64_t</code></td>
             <td style="padding: 10px;">Velké celé číslo (8 bajtů)</td>
             <td style="padding: 10px;"><code>%lld</code>, <code>%llu</code></td>
@@ -348,7 +348,7 @@ int main() {
 
     <div class="warning">
         <strong>Pozor na break:</strong> Nezapomeň na příkaz <code>break</code> za každým případem (case). 
-        Bez něj by program "propadl" a vykonal by i všechny následující případy!
+        Bez něj by program vykonal i všechny následující případy!
     </div>
 
     <pre><code class="language-c">#include &lt;stdio.h&gt;
@@ -375,7 +375,7 @@ int main() {
 
     <h3>Logické operátory</h3>
     <p>
-        V podmínkách často potřebujeme kombinovat více otázek najednou:
+        V podmínkách často potřebujeme kombinovat více výrazů najednou:
     </p>
     <ul>
         <li><code>&&</code> (Logické A) – obě podmínky musí být pravdivé.</li>
@@ -412,10 +412,6 @@ while (i < 3) {
 for (int i = 0; i < 5; i++) {
     printf("Ahoj z cyklu for, i: %d\n", i);
 }</code></pre>
-
-    
-
-[Image of flowchart of a for loop]
 
 
     <h3>3. Cyklus Do-While (Udělej a pak se ptej)</h3>
@@ -454,7 +450,7 @@ do {
     
     <ul>
         <li><strong>Deklarace (Prototyp):</strong> Krátký řádek nad funkcí <code>main</code>. Říká: "Někde v programu existuje funkce s tímto jménem a těmito parametry."</li>
-        <li><strong>Definice:</strong> Samotný kód funkce (tělo se složenými závorkami), který obvykle píšeme až pod <code>main</code>, aby nepřekážel.</li>
+        <li><strong>Definice:</strong> Samotný kód funkce (tělo se složenými závorkami), který obvykle píšeme až pod <code>main</code>, nebo do jiného zdrojového souboru.</li>
     </ul>
 
     
@@ -486,15 +482,15 @@ int secti_cisla(int a, int b) {
     <h3>Proč to tak dělat?</h3>
     <p>
         Možná se ptáte, proč funkci nenapsat rovnou nad <code>main</code>. U malých programů to jde, ale u velkých projektů, které mají stovky funkcí, byste se v kódu ztratili. 
-        Deklarace nám umožňují mít na začátku souboru přehledný seznam všech funkcí ("obsah"), zatímco detaily jsou schované dole.
+        Deklarace nám umožňují mít na začátku souboru přehledný seznam všech funkcí ("obsah"), zatímco detaily jsou jinde.
     </p>
 </section>
 
 <section id="pointers">
-    <h2>6. Pointery (Ukazatele) a argumenty funkcí</h2>
+    <h2>6. Pointery (Ukazatele)</h2>
     <p>
         Pointer není nic jiného než proměnná, která v sobě drží <strong>adresu v paměti</strong> jiné proměnné. 
-        Představte si paměť jako ulici s domy (buňkami). Každý dům má svou adresu (číslo) a uvnitř něj bydlí hodnota (např. číslo 42).
+        Představte si paměť jako ulici s domy (buňkami). Každý dům má svou adresu (číslo) a uvnitř něj je hodnota (např. číslo 42).
     </p>
 
     <h3>Dva klíčové operátory</h3>
@@ -508,7 +504,7 @@ int secti_cisla(int a, int b) {
     <h3>Předávání argumentů: Hodnotou vs. Odkazem</h3>
     <p>
         V C se standardně do funkcí posílá <strong>kopie</strong> hodnoty. Pokud funkci pošlete číslo a ona ho změní, v původním místě se nic nestane. 
-        Pokud ale pošlete <strong>pointer</strong> (adresu), funkce může "přijít k vám domů" a změnit hodnotu přímo u vás.
+        Pokud ale pošlete <strong>pointer</strong> (adresu), funkce může přejít na adresu a změnit hodnotu přímo tam.
     </p>
 
     <h3>Ukázkový kód</h3>
@@ -539,7 +535,7 @@ int main() {
     <h3>Nulový pointer (NULL)</h3>
     <p>
         Je dobrým zvykem nastavit pointer na <code>NULL</code>, pokud zrovna nikam neukazuje. 
-        Je to jako říct: "Tento ukazatel teď nevede k žádnému domu." Předejdete tím pádům programu.
+        Je to jako říct: "Tento ukazatel teď nevede k žádné platné adrese." Předejdete tím pádům programu.
     </p>
 </section>
 

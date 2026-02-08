@@ -61,6 +61,7 @@
 			<li><a href="#pwm-tca">11. PWM a Timer TCA (Dual-slope)</a></li>
 			<li><a href="#evsys">12. Event System: Hardwarová automatizace</a></li>
 			<li><a href="#checklist">13. Embedded Checklist & Best Practices</a></li>
+			<li><a href="#system-stability">15. Stabilita a úspora: WDT a Sleep</a></li>
         </ul>
     </nav>
 
@@ -623,6 +624,8 @@ void i2c_write_byte(uint8_t addr, uint8_t data) {
     TWI0.MCTRLB = TWI_MCMD_STOP_gc;
 }</code></pre>
     </div>
+	
+	<a href="https://onlinedocs.microchip.com/oxy/GUID-51D4F2DF-E4D3-4379-8E03-9AAF2593C7DA-en-US-3/GUID-97AB089D-37A7-4578-B7E7-D0CB0F755B7E.html">Přejít na web Microchip</a>
 
     <div class="info-box" style="margin-top: 20px;">
         <strong>Srovnání:</strong> 
@@ -837,6 +840,112 @@ ISR(ADC0_RESRDY_vect) {
     </div>
 </section>
 
+<section id="system-stability" class="section">
+    <h1>15. Systémová stabilita a Power Management</h1>
+    
+    <h3>15.1 Watchdog Timer (WDT) – Hardwarový dozor</h3>
+    <p>
+        <strong>Watchdog</strong> je nezávislý časovač, který slouží jako poslední linie obrany. Jeho úkolem je restartovat mikrokontrolér, pokud se software zacyklí nebo selže v důsledku vnějšího rušení. Pokud program pravidelně "nenakrmí" Watchdog, hardware vyvolá <strong>System Reset</strong>.
+    </p>
+
+    
+
+    <h4>Bezpečný zápis pomocí ccp_write_io</h4>
+    <p>
+        U řady AVR-Dx je nastavení Watchdogu chráněno mechanismem <strong>CCP (Configuration Change Protection)</strong>. Pro zápis musíme použít vestavěnou utilitu, která zajistí, že zápis proběhne v kritickém časovém okně 4 instrukčních cyklů.
+    </p>
+
+    <pre><code class="language-c">#include &lt;avr/wdt.h&gt;
+#include &lt;avr/cpufunc.h&gt; // Nutné pro ccp_write_io
+
+void wdt_init(void) {
+    // Bezpečný zápis do chráněného registru CTRLA
+    // Nastavení periody na 1 sekundu
+    ccp_write_io((void *) &WDT.CTRLA, WDT_PERIOD_1KCLK_gc);
+}
+
+int main(void) {
+    wdt_init();
+    while(1) {
+        // Hlavní aplikační smyčka
+        do_logic();
+        
+        // Resetování čítače - "krmení psa"
+        wdt_reset();
+    }
+}</code></pre>
+
+    <hr>
+
+    <h3>15.2 Správa napájení (Sleep Modes)</h3>
+    <p>
+        Pro snížení spotřeby (např. při provozu z baterie) disponuje AVR128DB48 režimy spánku. Každý režim vypíná jinou část čipu:
+    </p>
+
+    <table style="width:100%; border-collapse: collapse; margin: 20px 0;">
+        <tr style="background-color: #34495e; color: white;">
+            <th style="padding: 10px; border: 1px solid #ddd;">Režim</th>
+            <th style="padding: 10px; border: 1px solid #ddd;">Aktivní části</th>
+            <th style="padding: 10px; border: 1px solid #ddd;">Vlastnosti</th>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border: 1px solid #ddd;"><strong>Idle</strong></td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Periferie, DMA, Event System</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Bleskové probuzení, běží UART i Timery.</td>
+        </tr>
+        <tr style="background-color: #f9f9f9;">
+            <td style="padding: 10px; border: 1px solid #ddd;"><strong>Standby</strong></td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Volitelné periferie</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Kompromis mezi spotřebou a funkčností.</td>
+        </tr>
+        <tr>
+            <td style="padding: 10px; border: 1px solid #ddd;"><strong>Power-down</strong></td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Pouze WDT a externí přerušení</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">Nejnižší spotřeba (&micro;A), zastaveny hlavní hodiny.</td>
+        </tr>
+    </table>
+
+    
+
+    <h3>15.3 Kombinovaný režim: WDT Interrupt (Budík)</h3>
+    <p>
+        Watchdog na AVR-Dx umí víc než jen reset. Lze jej nastavit tak, aby místo restartu vyvolal <strong>přerušení</strong>. To je ideální pro probouzení z nejhlubšího spánku (Power-down) v pravidelných intervalech.
+    </p>
+
+    <pre><code class="language-c">#include &lt;avr/sleep.h&gt;
+
+void setup_low_power(void) {
+    // Nastavení WDT na 8s v režimu přerušení
+    ccp_write_io((void *) &WDT.CTRLA, WDT_PERIOD_8KCLK_gc);
+    
+    // Nastavení typu spánku na nejhlubší možný
+    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+}
+
+// ISR, které se zavolá po probuzení Watchdogem
+ISR(WDT_vect) {
+    // CPU se probudilo, po návratu z ISR pokračuje main
+}
+
+int main(void) {
+    setup_low_power();
+    sei();
+
+    while(1) {
+        // Uspání procesoru
+        sleep_mode(); 
+        
+        // --- ZDE CPU SPÍ ---
+        
+        // Po 8 sekundách se CPU probudí a provede úkol
+        measure_and_report();
+    }
+}</code></pre>
+
+    <div class="info-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+        <strong>Tip pro praxi:</strong> V režimu Power-down je spotřeba tak nízká, že největším žroutem proudu bývají piny v nedefinovaném stavu. Před uspáním se ujistěte, že všechny nepoužívané digitální vstupy mají zapnutý Pull-up nebo jsou nastaveny jako výstupy.
+    </div>
+</section>
 		
     </main>
 
