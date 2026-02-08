@@ -141,7 +141,7 @@
 <body>
 
     <nav>
-        <h2> REV C Reference</h2>
+        <h2> REV - C Reference</h2>
         <ul>
             <li><a href="#intro">1. První program</a></li>
             <li><a href="#types">2. Datové typy</a></li>
@@ -154,7 +154,8 @@
             <li><a href="#enum-union">9. Enum a Union</a></li>
             <li><a href="#preprocessor">10. Makra a Preprocesor</a></li>
             <li><a href="#malloc">11. Dynamická paměť</a></li>
-			<li><a href="#multi-file">12. Více souborů</a></li>
+			<li><a href="#multi-file">12. Více soubor .h .c</a></li>
+			<li><a href="#files-csv">13. Zápis do CSV</a></li>
         </ul>
     </nav>
 
@@ -842,7 +843,7 @@ int main() {
 </section>
 
 <section id="multi-file">
-    <h2>12. Rozdělení kódu (Modularity)</h2>
+    <h2>12. Rozdělení kódu (Modularita)</h2>
     <p>
         Když program roste, jeden soubor už nestačí. Kód pak můžeme rozdělit na:
     </p>
@@ -901,6 +902,59 @@ int main() {
         <li><strong>Rychlost:</strong> Při změně v jednom souboru se nemusí znovu kompilovat celý projekt.</li>
         <li><strong>Znovupoužitelnost:</strong> <code>vypocty.h</code> můžete prostě vzít a vložit do úplně jiného projektu.</li>
     </ul>
+</section>
+
+<section id="files-csv">
+    <h2>13. Prace se soubory </h2>
+    <p>
+        CSV (Comma Separated Values) je jednoduchý formát pro ukládání tabulkových dat. V C ho vytvoříme pomocí funkcí <code>fopen</code>, <code>fprintf</code> a <code>fclose</code>.
+    </p>
+
+    <h3>Zakladni funkce pro praci se soubory:</h3>
+    <ul>
+        <li><code>fopen("nazev.txt", "rezim")</code>: Otevře soubor s příslušnou příponou. Režim <code>"w"</code> (write) vytvoří nový soubor (nebo přemaže starý), <code>"a"</code> (append) připisuje na konec.</li>
+        <li><code>fprintf(soubor, "format", ...)</code>: Funguje jako klasický <code>printf</code>, ale místo na obrazovku zapisuje do souboru.</li>
+        <li><code>fclose(soubor)</code>: Uzavře soubor. Bez tohoto příkazu se data mohou ztratit!</li>
+    </ul>
+
+    
+
+    <h3>Ukazkovy kod: Vytvoreni CSV tabulky</h3>
+    <pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+
+int main() {
+    // 1. Otevreni souboru pro zapis ("w")
+    FILE *fp = fopen("data.csv", "w");
+
+    // 2. Kontrola, zda se soubor podarilo vytvorit
+    if (fp == NULL) {
+        printf("Chyba: Soubor nelze vytvorit!\n");
+        return 1;
+    }
+
+    // 3. Zapis hlavicky CSV (oddelovac je strednik)
+    fprintf(fp, "ID;Jmeno;Body\n");
+
+    // 4. Zapis dat (bez diakritiky v retezcich)
+    uint32_t id = 1;
+    int32_t body = 95;
+    fprintf(fp, "%u;Petr;%d\n", id, body);
+
+    id = 2;
+    body = 88;
+    fprintf(fp, "%u;Jana;%d\n", id, body);
+
+    // 5. Uzavreni souboru
+    fclose(fp);
+    printf("Data byla uspesne zapsana do souboru data.csv\n");
+
+    return 0;
+}</code></pre>
+
+    <div class="note">
+        <strong>Tip pro Excel:</strong> Pokud v CSV používáte jako oddělovač středník (<code>;</code>), český Excel ho po otevření automaticky rozdělí do sloupců. Pokud použijete čárku, v české verzi Windows se to často načte jako jeden dlouhý textový řádek.
+    </div>
 </section>
 
     </main>
