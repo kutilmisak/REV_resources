@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutoriál Mikrokontroléry (MCU)</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; margin: 0; display: flex; background: #f9f9f9; color: #333; }
+        
+        /* Navigace - Původní styl */
+        nav { width: 280px; background: #2c3e50; height: 100vh; position: fixed; padding: 20px; color: white; overflow-y: auto; }
+        nav h2 { font-size: 1.4rem; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        nav ul { list-style: none; padding: 0; }
+        nav li { margin-bottom: 12px; }
+        nav a { text-decoration: none; color: #ecf0f1; font-size: 0.95rem; transition: 0.3s; }
+        nav a:hover { color: #3498db; padding-left: 5px; }
+
+        /* Obsah */
+        main { margin-left: 320px; padding: 40px; max-width: 900px; background: white; min-height: 100vh; box-shadow: -5px 0 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; border-left: 5px solid #3498db; padding-left: 15px; }
+        h2 { color: #2980b9; margin-top: 40px; border-bottom: 1px solid #eee; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        .section { margin-bottom: 60px; }
+		
+		/* Styl pro responzivní obrázky */
+		img {
+			max-width: 100%;
+			height: auto;
+			display: block;
+			margin: 20px auto; /* Vycentrování a mezera kolem */
+			border-radius: 8px; /* Jemné zaoblení pro moderní vzhled */
+			box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Volitelný stín */
+		}
+				
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            nav { width: 100%; height: auto; position: relative; }
+            main { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2 style="color: #d3d3d3;">MCU Základy</h2>
+        <ul>
+            <li><a href="#intro">1. Co je Mikrokontrolér?</a></li>
+            <li><a href="#architecture">2. Programátorský model</a></li>
+            <li><a href="#workflow">3. Vývoj (Host vs Target)</a></li>
+            <li><a href="#memory">4. Paměť a Flashování</a></li>
+			<li><a href="#binary-path">4. Instrukce</a></li>
+            <li><a href="#debug-osc">5. Oscilátor a Debugger</a></li>
+			<li><a href="#gpio">6. GPIO: Vstup a Výstup</a></li>
+			<li><a href="#tcb-timer">7. Timer TCB a přerušení (ISR)</a></li>
+			<li><a href="#uart">8. UART: Sériová komunikace</a></li>
+			<li><a href="#analog">9. Analogové periferie: ADC, DAC a VREF</a></li>
+			<li><a href="#comm-bus">10. Sériové sběrnice: SPI a I2C</a></li>
+			<li><a href="#pwm-tca">11. PWM a Timer TCA (Dual-slope)</a></li>
+			<li><a href="#evsys">12. Event System: Hardwarová automatizace</a></li>
+			<li><a href="#checklist">13. Embedded Checklist & Best Practices</a></li>
+        </ul>
+    </nav>
+
+    <main>
+<section id="intro" class="section">
+    <h1>1. Mikrokontrolér (MCU) a jeho architektura</h1>
+    <p>
+        Mikrokontrolér je monolitický integrovaný obvod integrující procesorové jádro, paměťové subsystémy a periferie na jediném čipu. Na rozdíl od desktopových CPU je navržen pro deterministické řízení v reálném čase.
+    </p>
+
+    <h3>Blokové schéma a funkční celky</h3>
+    <p>Z pohledu programátora je MCU definován svou vnitřní strukturou a způsobem, jakým CPU komunikuje s okolím:</p>
+
+    <img src="mcu.jpg" alt="model MCU">
+
+    <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+        <div>
+            <h4>Výpočetní a řídicí jádro</h4>
+            <ul>
+                <li><strong>ALU (Arithmetic Logic Unit):</strong> Implementace aritmetických a logických operací nad daty v registrech.</li>
+                <li><strong>Registry:</strong> Sada nízkoúrovňových paměťových míst přímo v jádře. Konfigurace celého systému probíhá zápisem/čtením specifických řídicích registrů (Memory-Mapped I/O).</li>
+            </ul>
+        </div>
+        <div>
+            <h4>Paměťový subsystém</h4>
+            <ul>
+                <li><strong>Flash (Non-volatile):</strong> Paměť pro uložení binárního kódu a konstant. Data zůstávají zachována i bez napájení.</li>
+                <li><strong>SRAM (Volatile):</strong> Rychlá pracovní paměť pro data (heap, stack). Po ztrátě napájení dochází k vymazání obsahu.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3>Hardwarové zajištění běhu</h3>
+    <ul>
+        <li><strong>Oscilátor (Clock Source):</strong> Zdroj hodinového signálu definující taktovací frekvenci procesoru a synchronizaci periferií.</li>
+        <li><strong>Debug Interface (SWD / JTAG):</strong> Fyzické rozhraní pro on-chip debugging, umožňující přístup k interním stavům CPU, paměti a registrům během běhu.</li>
+        <li><strong>Power Management:</strong> Systém napájení (typicky 1.8V až 5V) s integrovanými regulátory a funkcemi pro reset při poklesu napětí (Brown-out reset).</li>
+    </ul>
+</section>
+
+<section id="architecture" class="section">
+	<h2>2. Programátorský model</h2>
+	<p>Abychom mohli psát kód, musíme rozumět vnitřním blokům čipu:</p>
+	
+	<img src="model.jpg" alt="Programátorský model MCU architektury">
+	
+	<ul>
+		<li><strong>ALU:</strong> Provádí matematické a logické operace.</li>
+		<li><strong>Registry:</strong> Nejdůležitější část pro nás. Jsou to adresy v paměti, kterými konfigurujeme hardware.</li>
+		<li><strong>Periferie:</strong> Jednotky jako GPIO (piny), Timery nebo ADC.</li>
+	</ul>
+	
+</section>
+
+<section id="workflow" class="section">
+    <h1>2. Vývojový proces: Host vs. Target</h1>
+    <p>
+        Při vývoji embedded systémů pracujeme ve dvou oddělených světech. Kód píšeme na výkonném počítači, ale výsledný program běží na malém čipu s omezenými zdroji.
+    </p>
+
+    <div style="display: flex; gap: 20px; margin: 30px 0; align-items: stretch;">
+        <div style="flex: 1; background: #f8f9fa; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #2c3e50; margin-top: 0;">Host Machine (PC)</h4>
+            <p>Váš počítač (Windows/Linux/Mac). Zde probíhá:</p>
+            <ul>
+                <li>Psaní zdrojového kódu (typicky v <strong>jazyce C</strong>).</li>
+                <li>Správa projektu v IDE.</li>
+                <li>Samotný proces kompilace.</li>
+            </ul>
+        </div>
+        <div style="display: flex; align-items: center; font-size: 2rem; color: #3498db;">➔</div>
+        <div style="flex: 1; background: #eef7fd; border: 1px solid #3498db; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #2c3e50; margin-top: 0;">Target Device (MCU)</h4>
+            <p>Cílový mikrokontrolér. Zde probíhá:</p>
+            <ul>
+                <li>Běh zkompilované binárky.</li>
+                <li>Interakce s fyzickým hardwarem.</li>
+                <li>Omezený prostor v řádech KB/MB.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3>1. Jazyk C v embedded</h3>
+    <p>
+        Ačkoliv existují alternativy (C++, Rust), <strong>jazyk C</strong> zůstává standardem. Nabízí ideální poměr mezi čitelností pro lidi a přímým přístupem k hardwarovým registrům bez zbytečné režie (overheadu).
+    </p>
+
+    <h3>2. Cross-Compiler (Křížový překladač)</h3>
+    <p>
+        Běžný kompilátor (např. v Visual Studiu) generuje instrukce pro váš procesor v PC (architektura x86). My však potřebujeme <strong>Cross-compiler</strong>. Ten běží na PC, ale generuje instrukce pro úplně jinou architekturu (např. <strong>ARM Cortex-M</strong>).
+    </p>
+    <ul>
+        <li><strong>Vstup:</strong> Soubory <code>.c</code> a <code>.h</code></li>
+        <li><strong>Výstup:</strong> Binární soubor (<code>.bin</code>, <code>.hex</code> nebo <code>.elf</code>) – čistá data pro paměť Flash.</li>
+    </ul>
+
+    <h3>3. HW Debugger / Programátor</h3>
+    <p>
+        Binárka uložená na disku PC zatím nic nedělá. Potřebujeme prostředníka – fyzické zařízení (<strong>programátor/debugger</strong>), které propojí USB port vašeho počítače s ladicím rozhraním čipu (různá rozhraní: SWD/JTAG).
+    </p>
+    
+    
+
+    <div class="info-box">
+        <p><strong>Úloha Debuggeru:</strong></p>
+        1. <strong>Flashování:</strong> Zápis binárky do paměti Flash. <br>
+        2. <strong>Ladění:</strong> Umožňuje zastavit program v čipu, číst hodnoty z RAM a procházet kód řádek po řádku.
+    </div>
+</section>
+
+<section id="binary-path" class="section">
+    <h2>2.1 Cesta kódu: C ➔ Assembler ➔ Strojový kód</h2>
+    <p>
+        Mikrokontrolér nerozumí příkazu <code>if (teplota > 20)</code>. Rozumí pouze specifickým číselným instrukcím uloženým v paměti Flash.
+    </p>
+
+    <div style="background: #f4f4f4; padding: 20px; border-radius: 8px;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #2c3e50; text-align: left;">
+                    <th style="padding: 10px;">Úroveň</th>
+                    <th style="padding: 10px;">Ukázka</th>
+                    <th style="padding: 10px;">Kdo to čte?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 10px;"><strong>Jazyk C</strong></td>
+                    <td style="padding: 10px;"><code>a = b + 5;</code></td>
+                    <td style="padding: 10px;">Programátor</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;"><strong>Assembler (ASM)</strong></td>
+                    <td style="padding: 10px;"><code>ADDS r0, r1, #5</code></td>
+                    <td style="padding: 10px;">Zkušený vývojář / Debugger</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;"><strong>Strojový kód</strong></td>
+                    <td style="padding: 10px;"><code>0x1C48</code> (binárně <code>000111...</code>)</td>
+                    <td style="padding: 10px;">Procesor (ALU)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>Co jsou to instrukce?</h3>
+    <p>
+        Instrukce je základní příkaz, který procesor dokáže vykonat v jednom nebo několika taktech oscilátoru. Každá architektura (ARM, AVR, x86) má svou vlastní <strong>instrukční sadu</strong>.
+    </p>
+
+    <div class="info-box">
+        <strong>Příklad v Assembleru (ARM Cortex-M):</strong><br>
+        <code>LDR r1, [r0]</code> — Načti (Load) hodnotu z adresy v registru r0 do r1.<br>
+        <code>ADDS r1, r1, #1</code> — Přičti k hodnotě v r1 jedničku.<br>
+        <code>STR r1, [r0]</code> — Ulož (Store) novou hodnotu zpět na původní adresu.
+    </div>
+
+    <h3>Proč nás to zajímá?</h3>
+    <p>
+        Při psaní v C se o tento překlad stará <strong>kompilátor</strong>. Je ale důležité vědět, že:
+    </p>
+    <ul>
+        <li>Jeden řádek v C může vygenerovat desítky instrukcí strojového kódu.</li>
+        <li>Při <strong>debuggingu</strong> (ladění) často uvidíte Assembler, když se snažíte zjistit, proč se procesor chová jinak, než jste čekali.</li>
+        <li><strong>Binárka (.bin/.hex)</strong>, kterou nahráváte do čipu, je vlastně jen dlouhý seznam těchto číselných instrukcí.</li>
+    </ul>
+</section>
+
+        <section id="memory" class="section">
+            <h2>4. Flash a RAM</h2>
+            <p>V MCU máme dva základní druhy paměti:</p>
+            <ul>
+                <li><strong>Flash:</strong> Zde je uložen program. Přežije vypnutí napájení.</li>
+                <li><strong>RAM:</strong> Pracovní paměť pro proměnné. Po vypnutí se vymaže.</li>
+            </ul>
+            <pre><code class="language-c">// Flash: konstanty, které se nemění
+const char model[] = "STM32F4"; 
+
+// RAM: data, která procesor zpracovává
+int aktualni_teplota = 0;</code></pre>
+        </section>
+
+        <section id="debug-osc" class="section">
+            <h2>5. Oscilátor a Debugger</h2>
+            <ul>
+                <li><strong>Oscilátor:</strong> Srdce, které dává procesoru takt. Bez hodin (Clock) se nevykoná žádná instrukce.</li>
+                <li><strong>Debug modul:</strong> Umožňuje nám pomocí debuggeru zastavit kód v čipu a sledovat registry.</li>
+            </ul>
+        </section>
+		
+<section id="gpio" class="section">
+    <h1>6. GPIO </h1>
+	
+	<h3>Obecný princip: Co je to vlastně GPIO?</h3>
+		<p>
+			Zkratka <strong>GPIO</strong> (General Purpose Input/Output) znamená, že pin nemá pevně danou funkci (jako má třeba napájecí pin), ale vy jako programátoři rozhodujete, k čemu bude sloužit.
+		</p>
+
+
+
+		<div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+			<div style="background: #fff; padding: 15px; border: 1px dashed #3498db;">
+				<h4>Logické úrovně</h4>
+				<p>V digitálním světě pracujeme se dvěma stavy:</p>
+				<ul>
+					<li><strong>Logická 1 (HIGH):</strong> Napětí blízké napájecímu (např. 3.3V).</li>
+					<li><strong>Logická 0 (LOW):</strong> Napětí blízké zemi (0V).</li>
+				</ul>
+			</div>
+			<div style="background: #fff; padding: 15px; border: 1px dashed #3498db;">
+				<h4>Vysoká impedance (Hi-Z)</h4>
+				<p>Když je pin nastaven jako <strong>vstupní</strong>, je ve stavu vysokého odporu. Chová se jako odpojený drát a pouze "naslouchá" napětí, které přichází zvenčí, aniž by ho ovlivňoval.</p>
+			</div>
+		</div>
+			
+    <p>
+        U čipů nové generace AVR (jako je <strong>AVR128DB48</strong>) jsou piny organizovány do portů (PORTA, PORTB, atd.). Každý port je v C reprezentován jako <strong>struktura</strong>, která obsahuje všechny ovládací registry.
+    </p>
+
+    <h3>Vnitřní schéma pinu (AVR-Dx)</h3>
+    <p>
+        Každý pin má vylepšenou strukturu s možností nastavení invertované logiky, pull-up rezistorů a volitelnou funkcí "Slew Rate Control" pro snížení rušení.
+    </p>
+
+    
+
+    <h3>Základní registry v C (Struktura PORT_t)</h3>
+    <p>
+        Na rozdíl od starších čipů se k registrům přistupuje pomocí tečkové notace. Zde jsou ty nejdůležitější:
+    </p>
+    <ul>
+        <li><strong>DIR:</strong> Nastavení směru (0 = vstup, 1 = výstup).</li>
+        <li><strong>OUT:</strong> Nastavení logické úrovně výstupu.</li>
+        <li><strong>IN:</strong> Čtení logické úrovně vstupu.</li>
+        <li><strong>PINxCTRL:</strong> Konfigurační registr pro konkrétní pin (zde se zapíná např. PULLUP).</li>
+    </ul>
+
+    <h3>Praktická ukázka v C</h3>
+    <p>Předpokládejme, že máme LED připojenou na pin <strong>PA3</strong>:</p>
+
+    <pre><code class="language-c">// AVR-Dx používá přehledné struktury
+#include &lt;avr/io.h&gt;
+
+void gpio_init() {
+    // 1. Nastavíme pin PA3 jako výstupní
+    PORTA.DIRSET = PIN3_bm;   // Používáme SET registr pro atomický zápis
+    
+    // 2. Aktivujeme pull-up na vstupu (např. tlačítko na PA4)
+    PORTA.PIN4CTRL = PORT_PULLUPEN_bm;
+}
+
+void toggle_led() {
+    // 3. Přepnutí stavu pinu (TGL registr je specialita nových AVR)
+    PORTA.OUTTGL = PIN3_bm; 
+}</code></pre>
+
+    <div class="info-box">
+        <strong>Všimni si:</strong> Moderní AVR mají registry <code>SET</code>, <code>CLR</code> a <code>TGL</code>. 
+        Díky nim nemusíš používat bitové operace jako <code>PORTA.OUT |= (1 &lt;&lt; 3)</code>, což je bezpečnější a rychlejší, protože zápis proběhne v jednom instrukčním cyklu.
+    </div>
+</section>
+
+<section id="tcb-timer" class="section">
+    <h1>7. Timer a Přerušení (ISR)</h1>
+	
+	<h3>Obecný princip: Jak funguje Timer a ISR?</h3>
+	<p>
+		Představ si <strong>Timer</strong> jako vnitřní stopky mikrokontroléru, které běží nezávisle na hlavním programu. <strong>ISR</strong> (Interrupt Service Routine) je pak "pohotovostní hlídka".
+	</p>
+
+	<div class="info-box" style="background: #f9f9f9;">
+		<strong>Analogie:</strong> 
+		Představ si, že vaříš čaj. 
+		<ul>
+			<li><strong>Polling:</strong> Každých 5 sekund se jdeš podívat do kuchyně, jestli už vře voda. Nemůžeš dělat nic jiného pořádně.</li>
+			<li><strong>Interrupt (ISR):</strong> Dáš vodu na sporák a jdeš si číst. Když voda začne vřít, zapíská konvice (přerušení). Ty odložíš knihu (pauza hlavního programu), zaliješ čaj (vykonáš ISR) a pak se vrátíš ke čtení přesně tam, kde jsi přestal.</li>
+		</ul>
+	</div>
+
+
+
+	<h4>Proč je přerušení klíčové?</h4>
+	<ul>
+		<li><strong>Reakční doba:</strong> Čip reaguje na událost (stisk tlačítka, přetečení timeru) okamžitě, ne až k němu "dojde řada" v cyklu <code>while(1)</code>.</li>
+		<li><strong>Úspora energie:</strong> Procesor může spát (Sleep mode) a probudit ho může až právě přerušení od timeru nebo senzoru.</li>
+	</ul>
+	
+    <p>
+        <strong>TCB (Timer/Counter B)</strong> je 16bitový časovač. Zatímco hlavní Timer A (TCA) je komplexní a vhodný pro PWM, TCB je ideální pro generování pravidelných přerušení nebo měření délky pulzu.
+    </p>
+
+    <h3>Klíčový koncept: Jak vzniká přerušení?</h3>
+    <p>
+        Přerušení (Interrupt) je mechanismus, kdy hardware pozastaví vykonávání hlavní smyčky <code>while(1)</code>, odskočí do speciální funkce (ISR) a po jejím skončení se vrátí zpět.
+    </p>
+
+    <div class="info-box">
+        <strong>Příklad:</strong> Chceme, aby se každou milisekundu spustil kód, který zkontroluje stav senzoru. Timer počítá pulzy oscilátoru a při shodě s nastavenou hodnotou vyvolá přerušení.
+    </div>
+
+    <h3>Konfigurace TCB0 pro periodické přerušení</h3>
+    <p>
+        Aby TCB fungoval jako časovač, musíme nastavit jeho mód na <strong>Periodic Interrupt</strong>.
+    </p>
+
+    <pre><code class="language-c">#include &lt;avr/io.h&gt;
+#include &lt;avr/interrupt.h&gt;
+
+void timer_init() {
+    // 1. Nastavení periody (kolik tiků má timer napočítat)
+    // Při 4MHz hodinách a CCMP = 4000 vyvolá přerušení každou 1ms
+    TCB0.CCMP = 4000; 
+
+    // 2. Zapnutí přerušení (Interrupt Enable)
+    TCB0.INTCTRL = TCB_CAPT_bm; 
+
+    // 3. Konfigurace a spuštění: Periodický mód, zapnutí timeru
+    TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm; 
+    
+    // 4. Globální povolení přerušení (instrukce procesoru)
+    sei(); 
+}</code></pre>
+
+    <h3>ISR (Interrupt Service Routine)</h3>
+    <p>
+        Tato funkce se volá automaticky hardwarem. Musí být co nejkratší. V AVR-GCC se definuje pomocí makra <code>ISR()</code> s názvem vektoru přerušení.
+    </p>
+
+    <pre><code class="language-c">// Funkce, která se spustí při přerušení od TCB0
+ISR(TCB0_INT_vect) {
+    // 1. Musíme ručně smazat příznak přerušení (Interrupt Flag)
+    TCB0.INTFLAGS = TCB_CAPT_bm;
+
+    // 2. Samotná akce (např. negace pinu PA3)
+    PORTA.OUTTGL = PIN3_bm;
+}</code></pre>
+
+    <h3>Na co si dát pozor</h3>
+    <ul>
+        <li><strong>Volatile:</strong> Pokud v ISR měníte proměnnou, kterou čtete v <code>main</code>, musí být definována jako <code>volatile int moje_promenna;</code>. Jinak ji kompilátor může chybně zoptimalizovat.</li>
+        <li><strong>Atomický zápis:</strong> Pokud v <code>main</code> pracujete s 16bitovou hodnotou, kterou mění ISR, musíte na chvíli zakázat přerušení (<code>cli()</code>), aby nebyla hodnota přečtena napůl změněná.</li>
+    </ul>
+</section>
+
+<section id="uart" class="section">
+    <h1>8. UART (Universal Asynchronous Receiver-Transmitter)</h1>
+    
+    <h3>Obecný princip a asynchronní přenos</h3>
+    <p>
+        UART je sériový komunikační protokol, který k přenosu dat využívá pouze dva vodiče: <strong>TX</strong> (Transmit) a <strong>RX</strong> (Receive). Označení <strong>asynchronní</strong> znamená, že rozhraní nesdílí společný hodinový signál (Clock). 
+    </p>
+
+    
+
+    <p>
+        Aby komunikace fungovala, musí se obě strany předem dohodnout na parametrech:
+    </p>
+    <ul>
+        <li><strong>Baudrate:</strong> Přenosová rychlost (počet symbolů za sekundu). Typické hodnoty jsou 9600 nebo 115200 bps.</li>
+        <li><strong>Frame Format:</strong> Struktura datového rámce (počet datových bitů, parita, počet stop bitů). Nejčastější je formát <strong>8N1</strong> (8 datových bitů, žádná parita, 1 stop bit).</li>
+        <li><strong>Start/Stop bity:</strong> Protože neexistuje sdílený Clock, začátek přenosu signalizuje Start bit, který synchronizuje přijímač s vysílačem.</li>
+    </ul>
+
+    <h3>UART na AVR128DB48 (USART Periferie)</h3>
+    <p>
+        U čipů řady AVR-Dx se periferie označuje jako <strong>USART</strong>, protože podporuje i synchronní režim. Pro základní komunikaci s PC však využíváme asynchronní mód.
+    </p>
+
+    
+
+    <h3>Výpočet Baudrate</h3>
+    <p>
+        Hodnota pro registr <code>BAUD</code> se vypočítá na základě frekvence periferií ($f_{CLK\_PER}$) a požadované rychlosti ($BAUD_{rate}$). Pro asynchronní režim (16x oversampling) platí vztah:
+        $$BAUD_{reg} = \frac{64 \cdot f_{CLK\_PER}}{S \cdot BAUD_{rate}}$$
+        Kde $S$ je počet vzorků na bit (typicky 16). 
+    </p>
+
+    <h3>Implementace v C</h3>
+    <p>
+        Příklad inicializace USART3 (který je na AVR128DB48 Curiosity Nano kitu připojen k USB převodníku) a funkce pro odeslání znaku:
+    </p>
+
+    <pre><code class="language-c">#include &lt;avr/io.h&gt;
+
+void uart_init(uint32_t baudrate) {
+    // 1. Nastavení pinu TX (PB0) jako výstupní
+    PORTB.DIRSET = PIN0_bm;
+    
+    // 2. Výpočet a nastavení Baudrate (pro 4MHz takt a 9600 bps)
+    // Výsledek (64 * 4000000) / (16 * 9600) = 1666
+    USART3.BAUD = (uint16_t)((64 * 4000000) / (16 * baudrate));
+    
+    // 3. Povolení vysílače (Transmitter)
+    USART3.CTRLB = USART_TXEN_bm;
+}
+
+void uart_send_char(char c) {
+    // Čekání na vyprázdnění vysílacího bufferu (DRE - Data Register Empty)
+    while (!(USART3.STATUS & USART_DREIF_bm));
+    
+    // Zápis dat do registru spustí samotný fyzický přenos
+    USART3.TXDATAL = c;
+}
+
+void uart_send_string(const char* str) {
+    while (*str) {
+        uart_send_char(*str++);
+    }
+}</code></pre>
+
+    <div class="info-box">
+        <strong>Poznámka k registrům:</strong> Registr <code>STATUS</code> obsahuje příznak <code>DREIF</code>, který nám říká, zda je hardware připraven přijmout další bajt k odeslání. Pokud bychom do <code>TXDATAL</code> zapsali dříve, než se předchozí bajt odešle, data by byla přepsána.
+    </div>
+</section>
+
+
+<section id="analog" class="section">
+    <h1>9. Analogové periferie: ADC, DAC a VREF</h1>
+    <p>
+        Mikrokontroléry AVR-Dx umožňují precizní práci s analogovým signálem. Klíčem k úspěchu je pochopení vztahu mezi referenčním napětím, rozlišením a reálnou hodnotou v milivoltech.
+    </p>
+
+    <h3>1. ADC (Analog-to-Digital Converter)</h3>
+    <p>
+        ADC převádí vstupní napětí na digitální číslo. AVR128DB48 disponuje <strong>12bitovým ADC</strong>, což znamená, že rozsah mezi 0V a referencí dělí na 4096 kroků.
+    </p>
+    
+    
+
+    <div style="background: #f8f9fa; padding: 15px; border-left: 5px solid #2ecc71; margin: 15px 0;">
+        <strong>Vztah pro výpočet:</strong><br>
+        <code>Digitální hodnota = (V_vstup / V_ref) * 4095</code>
+    </div>
+
+    <h3>2. DAC (Digital-to-Analog Converter)</h3>
+    <p>
+        DAC provádí opačný proces – z digitálního čísla vytvoří na pinu reálné napětí. U řady AVR-Dx je DAC <strong>10bitový</strong> (rozsah 0 až 1023). Je ideální pro generování funkcí nebo řízení analogových obvodů.
+    </p>
+
+    <h3>3. VREF (Voltage Reference)</h3>
+    <p>
+        Referenční napětí definuje stabilitu a přesnost převodu. AVR128DB48 má interní referenční zdroj, který lze softwarově přepínat (např. 1.024V, 2.048V, 2.5V, 4.096V).
+    </p>
+
+    
+
+    <h3>Implementace pro AVR128DB48</h3>
+    <pre><code class="language-c">#include &lt;avr/io.h&gt;
+
+void analog_init(void) {
+    // 1. Konfigurace VREF: Nastavení 2.048V pro ADC0
+    VREF.ADC0CTRLA = VREF_REFSEL_2V048_gc;
+    
+    // 2. Konfigurace ADC: 12-bit, povolit, dělička hodin 16
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | ADC_ENABLE_bm;
+    ADC0.CTRLC = ADC_PRESC_DIV16_gc;
+    ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc; // Snímání z pinu PD2
+    
+    // 3. Konfigurace DAC: Povolit výstup na pin PD6
+    VREF.DAC0CTRLA = VREF_REFSEL_2V048_gc; // I DAC potřebuje referenci
+    DAC0.CTRLA = DAC_ENABLE_bm | DAC_OUTEN_bm;
+}
+
+uint16_t read_adc(void) {
+    ADC0.COMMAND = ADC_STCONV_bm;          // Start měření
+    while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)); // Čekání na výsledek
+    return ADC0.RES;                       // 0 až 4095
+}
+
+void write_dac(uint16_t value) {
+    DAC0.DATAL = (value & 0xFF);           // Zápis 10-bitové hodnoty
+    DAC0.DATAH = (value >> 8);
+}</code></pre>
+
+    <div class="info-box">
+        <strong>Technická poznámka:</strong> Pokud měříte napětí baterie, které může být vyšší než V<sub>REF</sub>, musíte použít odporový dělič napětí, jinak dojde k saturaci ADC nebo poškození pinu.
+    </div>
+</section>
+
+<section id="comm-bus" class="section">
+    <h1>10. Sériové sběrnice: SPI a I2C (TWI)</h1>
+    <p>
+        Na rozdíl od UARTu jsou sběrnice <strong>SPI</strong> a <strong>I2C</strong> synchronní. To znamená, že sdílejí společný hodinový signál (Clock), což umožňuje mnohem vyšší rychlosti a spolehlivější přenos dat.
+    </p>
+
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h2>10.1 SPI (Serial Peripheral Interface)</h2>
+        <p>
+            SPI je nejrychlejší sběrnice pro komunikaci na krátké vzdálenosti (SD karty, displeje, rychlé ADC). Pracuje v režimu <strong>Full-Duplex</strong> (data tečou oběma směry současně).
+        </p>
+        
+        <h4>Zapojení a vodiče (4-vodičové):</h4>
+        <ul>
+            <li><strong>SCK (Serial Clock):</strong> Hodinový signál generovaný Masterem.</li>
+            <li><strong>MOSI (Master Out Slave In):</strong> Datová linka z Masteru do periferie.</li>
+            <li><strong>MISO (Master In Slave Out):</strong> Datová linka z periferie do Masteru.</li>
+            <li><strong>SS / CS (Slave Select / Chip Select):</strong> Výběr konkrétního čipu (aktivní v logické 0).</li>
+        </ul>
+
+        
+
+        <h4>Implementace na AVR128DB48:</h4>
+        <pre><code class="language-c">// Inicializace SPI v režimu Master
+void spi_init(void) {
+    // 1. Nastavení směrů pinů (MOSI, SCK a SS jako výstupy)
+    PORTA.DIRSET = PIN4_bm | PIN6_bm | PIN7_bm;
+    
+    // 2. Konfigurace SPI: Master, Mode 0, Clock/4
+    SPI0.CTRLA = SPI_MASTER_bm | SPI_ENABLE_bm;
+}
+
+uint8_t spi_transfer(uint8_t data) {
+    SPI0.DATA = data;                      // Start přenosu
+    while (!(SPI0.INTFLAGS & SPI_IF_bm));  // Čekání na dokončení
+    return SPI0.DATA;                      // Návrat přijatých dat
+}</code></pre>
+    </div>
+
+    <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h2>10.2 I2C / TWI (Two-Wire Interface)</h2>
+        <p>
+            I2C je úsporná sběrnice využívající adresování. Na rozdíl od SPI stačí pro připojení desítek zařízení pouze dva vodiče. Pracuje v režimu <strong>Half-Duplex</strong>.
+        </p>
+
+        <h4>Zapojení a vodiče (2-vodičové):</h4>
+        <ul>
+            <li><strong>SDA (Serial Data):</strong> Obousměrná datová linka.</li>
+            <li><strong>SCL (Serial Clock):</strong> Hodinový signál.</li>
+        </ul>
+        
+        <div class="info-box" style="background: #fff3cd; border-left-color: #ffc107;">
+            <strong>Důležité:</strong> Linky SDA a SCL jsou typu <strong>Open-Drain</strong>. To znamená, že musí být vždy připojeny k napájecímu napětí přes externí <strong>Pull-up rezistory</strong> (typicky 4.7 k&Omega;).
+        </div>
+
+        
+
+        <h4>Adresování a Start/Stop:</h4>
+        <p>
+            Každá komunikace začíná <strong>START</strong> podmínkou, následuje <strong>7bitová adresa</strong> zařízení a bit pro zápis/čtení (R/W). Zařízení odpovídá bitem <strong>ACK</strong> (Acknowledge).
+        </p>
+
+        <h4>Ukázka zápisu na AVR128DB48 (TWI0):</h4>
+        <pre><code class="language-c">void i2c_init(void) {
+    // Nastavení rychlosti 100 kHz (Standard Mode)
+    TWI0.MBAUD = 10; 
+    TWI0.MCTRLA = TWI_ENABLE_bm;
+    TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc; // Inicializace stavu sběrnice
+}
+
+void i2c_write_byte(uint8_t addr, uint8_t data) {
+    // Start + Adresa (bit 0 = 0 pro zápis)
+    TWI0.MADDR = addr << 1;
+    while (!(TWI0.MSTATUS & TWI_WIF_bm)); // Čekání na odeslání adresy
+    
+    // Odeslání dat
+    TWI0.MDATA = data;
+    while (!(TWI0.MSTATUS & TWI_WIF_bm));
+    
+    // Stop podmínka
+    TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+}</code></pre>
+    </div>
+
+    <div class="info-box" style="margin-top: 20px;">
+        <strong>Srovnání:</strong> 
+        SPI je mnohem rychlejší (jednotky až desítky MHz) a jednodušší na implementaci, ale vyžaduje více vodičů. 
+        I2C je pomalejší (standardně 100/400 kHz), ale extrémně úsporné na počet pinů mikrokontroléru.
+    </div>
+</section>
+
+<section id="pwm-tca" class="section">
+    <h1>11. PWM a Timer TCA (Dual-slope režim)</h1>
+    
+    <h3>Obecný princip: Co je to PWM?</h3>
+    <p>
+        <strong>PWM (Pulse Width Modulation)</strong> neboli pulzně šířková modulace je technika pro simulaci analogového napětí pomocí digitálního signálu. Rychlým střídáním stavu 0 a 1 vytvoříme průměrnou hodnotu napětí.
+    </p>
+
+    
+
+    <ul>
+        <li><strong>Perioda (Frekvence):</strong> Jak často se celý cyklus opakuje.</li>
+        <li><strong>Střída (Duty Cycle):</strong> Poměr času, kdy je signál v logické 1, k celkové periodě. Vyjadřuje se v procentech (0–100 %).</li>
+    </ul>
+
+    <h3>Dual-slope vs. Single-slope</h3>
+    <p>
+        U AVR128DB48 Timer TCA nabízí režim <strong>Dual-slope PWM</strong>. Na rozdíl od běžného režimu, kdy čítač počítá pouze nahoru (0 &rarr; MAX), v Dual-slope režimu počítá nahoru a hned zase dolů (0 &rarr; MAX &rarr; 0).
+    </p>
+    
+    
+
+    <p><strong>Výhody Dual-slope:</strong></p>
+    <ul>
+        <li>Symetrické pulzy (střed pulzu je vždy ve stejném místě).</li>
+        <li>Poloviční frekvence přepínání při stejném rozlišení, což vede k nižšímu rušení (EMI).</li>
+    </ul>
+
+    <h3>Konfigurace TCA0 na AVR128DB48</h3>
+    <p>
+        V tomto příkladu nastavíme PWM na pinu <strong>PA0</strong> (výstupní kanál WO0 časovače TCA0).
+    </p>
+
+    <pre><code class="language-c">#include &lt;avr/io.h&gt;
+
+void pwm_init(void) {
+    // 1. Nastavení pinu PA0 jako výstupní
+    PORTA.DIRSET = PIN0_bm;
+
+    // 2. Nastavení periody: V Dual-slope je frekvence f = f_clk / (2 * N * PER)
+    // Pro f_clk = 4MHz, bez děličky a PER = 2000 bude f_pwm = 1000 Hz
+    TCA0.SINGLE.PER = 2000;
+
+    // 3. Nastavení střídy (Compare 0) - např. 50% (1000 z 2000)
+    TCA0.SINGLE.CMP0 = 1000;
+
+    // 4. Konfigurace Waveform Generation: Dual-slope PWM, aktivace kanálu 0
+    TCA0.SINGLE.CTRLB = TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_DSOP_gc;
+
+    // 5. Spuštění časovače bez děličky (Clock / 1)
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
+}
+
+void set_pwm_duty(uint16_t value) {
+    // Dynamická změna střídy (např. jas LED)
+    if (value <= 2000) {
+        TCA0.SINGLE.CMP0 = value;
+    }
+}</code></pre>
+
+    <div class="info-box" style="border-left-color: #9b59b6; background: #f4eef8;">
+        <strong>Kritický rozdíl v registrech:</strong> AVR-Dx používá pro TCA dvě sady registrů – <code>SINGLE</code> a <code>SPLIT</code>. Zde používáme <strong>SINGLE</strong> (jeden 16bitový časovač), který je pro přesné PWM ideální.
+    </div>
+</section>
+
+<section id="evsys" class="section">
+    <h1>12. Event System (EVSYS): Magie bez účasti CPU</h1>
+    
+    <h3>Obecný princip: Periferie mluví s periferií</h3>
+    <p>
+        Standardně musí procesor (CPU) hlídat stav periferií: například když přeteče časovač, procesor musí skočit do ISR a tam ručně spustit ADC převod. 
+        <strong>Event System</strong> tuto cestu obchází. Umožňuje propojit <strong>Generátor</strong> (např. Timer) přímo s <strong>Uživatelem</strong> (např. ADC) pomocí vnitřních hardwarových kanálů.
+    </p>
+
+    
+
+    <h4>Hlavní výhody:</h4>
+    <ul>
+        <li><strong>Nulová latence:</strong> Reakce na událost proběhne v řádu nanosekund.</li>
+        <li><strong>Úspora energie:</strong> CPU může zůstat v režimu spánku (Sleep), zatímco Timer periodicky spouští ADC a ten ukládá data.</li>
+        <li><strong>Deterministické časování:</strong> Převody probíhají v naprosto přesných intervalech, neovlivněných jiným běžícím kódem.</li>
+    </ul>
+
+    <h3>Praktický scénář: Timer spouští ADC</h3>
+    <p>
+        V tomto nastavení využijeme <strong>RTC (Real Time Counter)</strong> nebo <strong>Timer TCA</strong> jako generátor události "Overflow". Tato událost skrze kanál 0 spustí měření na ADC0.
+    </p>
+
+    
+
+    <h3>Implementace na AVR128DB48</h3>
+    <pre><code class="language-c">#include &lt;avr/io.h&gt;
+
+void evsys_init(void) {
+    // 1. Nastavení generátoru: Přetečení Timeru TCA0 bude generovat událost
+    // Kanál 0 bude přenášet událost z TCA0_OVF
+    EVSYS.CHANNEL0 = EVSYS_CHANNEL0_TCA0_OVF_LUN_gc;
+
+    // 2. Nastavení uživatele: ADC0 bude "konzumovat" událost z kanálu 0
+    // Tato událost automaticky vyvolá spuštění převodu (Start Conversion)
+    EVSYS.USERADC0START = EVSYS_USER_CHANNEL0_gc;
+}
+
+void adc_event_init(void) {
+    // Konfigurace ADC pro práci s Event Systemem
+    // Musíme povolit "Event Control", aby ADC reagovalo na vnější podněty
+    ADC0.EVCTRL = ADC_STARTEV_bm; 
+    
+    // Standardní inicializace ADC (12-bit, zapnutí)
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | ADC_ENABLE_bm;
+}
+
+void timer_for_evsys_init(void) {
+    // Nastavení Timeru TCA0 na periodu, ve které chceme vzorkovat (např. 100 Hz)
+    TCA0.SINGLE.PER = 40000; 
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
+}</code></pre>
+
+<h3>Vyzvednutí výsledku: Role ISR</h3>
+    <p>
+        I když je spuštění převodu plně automatické (Timer &rarr; EVSYS &rarr; ADC), procesor musí výsledek po dokončení převodu přečíst. K tomu využijeme přerušení od ADC (Result Ready).
+    </p>
+
+    
+
+    <pre><code class="language-c">// 1. Povolení přerušení v inicializaci ADC
+void adc_event_init(void) {
+    ADC0.EVCTRL = ADC_STARTEV_bm;           // ADC reaguje na událost z EVSYS
+    ADC0.INTCTRL = ADC_RESRDY_bm;           // Povolení přerušení "Result Ready"
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | ADC_ENABLE_bm;
+}
+
+// 2. Obsluha přerušení - zde si CPU vyzvedne hotová data
+ISR(ADC0_RESRDY_vect) {
+    // Smazání příznaku přerušení proběhne automaticky přečtením registru RES
+    uint16_t namerena_hodnota = ADC0.RES;
+
+    // Zde můžeme data zpracovat (např. poslat přes UART)
+    process_data(namerena_hodnota);
+}</code></pre>
+
+    <div class="info-box" style="background: #e1f5fe; border-left-color: #0288d1;">
+        <strong>Klíčový poznatek:</strong> Všimni si, že v kódu není žádná funkce <code>ISR</code> ani <code>while</code> smyčka, která by spouštěla převod. Jakmile tyto tři periferie nastavíš a spustíš timer, data v registru <code>ADC0.RES</code> se budou aktualizovat zcela automaticky.
+    </div>
+</section>
+
+<section id="checklist" class="section">
+    <h1>13. Embedded Checklist: Než spustíte kód</h1>
+    <p>
+        Programování mikrokontrolérů jako <strong>AVR128DB48</strong> vyžaduje jiný přístup než psaní aplikací pro PC. Zde je seznam kritických bodů, které byste měli projít pokaždé, když váš kód nefunguje podle představ.
+    </p>
+
+    <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+        
+        <div style="background: #fff; padding: 20px; border: 1px solid #dee2e6; border-top: 4px solid #3498db;">
+            <h3>1. Konfigurace Pinů</h3>
+            <ul style="padding-left: 20px;">
+                <li>Je pin nastaven jako <strong>vstup</strong> nebo <strong>výstup</strong> (DIR)?</li>
+                <li>Pokud je to vstup, má definovanou úroveň (Pull-up)?</li>
+                <li>Není pin sdílen s jinou periferií (Alternate Function)?</li>
+                <li>Jsou piny I2C osazeny externími <strong>Pull-up</strong> rezistory?</li>
+            </ul>
+        </div>
+
+        <div style="background: #fff; padding: 20px; border: 1px solid #dee2e6; border-top: 4px solid #e74c3c;">
+            <h3>2. Mechanika Přerušení</h3>
+            <ul style="padding-left: 20px;">
+                <li>Je v ISR <strong>vynulován příznak</strong> (Flag)?</li>
+                <li>Bylo zavoláno globální povolení <code>sei()</code>?</li>
+                <li>Jste si jistí, že ISR je co nejkratší?</li>
+                <li>JSOU proměnné sdílené mezi ISR a main typu <code>volatile</code>?</li>
+            </ul>
+        </div>
+
+        <div style="background: #fff; padding: 20px; border: 1px solid #dee2e6; border-top: 4px solid #f1c40f;">
+            <h3>3. Clocky a Časování</h3>
+            <ul style="padding-left: 20px;">
+                <li>Odpovídá <code>F_CPU</code> reálnému nastavení oscilátoru?</li>
+                <li>Je správně vypočítán Baudrate/Perioda vzhledem k děličkám?</li>
+                <li>Není čítač timeru příliš rychlý pro daný rozsah (přetečení)?</li>
+            </ul>
+        </div>
+
+        <div style="background: #fff; padding: 20px; border: 1px solid #dee2e6; border-top: 4px solid #2ecc71;">
+            <h3>4. Práce s Registry</h3>
+            <ul style="padding-left: 20px;">
+                <li>Používáte atomické zápisy (<code>SET</code> / <code>CLR</code> / <code>TGL</code>)?</li>
+                <li>Čtete správný registr? (Např. <code>IN</code> pro čtení pinu, <code>OUT</code> pro zápis).</li>
+                <li>Máte v IDE správně nastavený model čipu?</li>
+            </ul>
+        </div>
+    </div>
+
+    
+
+    <h3>Zlatá pravidla Embedded C</h3>
+    <blockquote style="background: #f9f9f9; border-left: 10px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;">
+        <strong>"Hardware nikdy nelže."</strong> Pokud se kód chová nepředvídatelně, problém je téměř vždy v inicializaci nebo v nepochopení časové synchronizace mezi CPU a periferií.
+    </blockquote>
+
+    <div class="info-box" style="margin-top: 30px; text-align: center; background: #2c3e50; color: white;">
+        <strong>Gratuluji!</strong> Nyní máte kompletní technický přehled o základech i pokročilých funkcích AVR128DB48. 
+        Dalším krokem je studium <strong>Datasheetu</strong>, který je pro každého inženýra tou nejdůležitější knihou.
+    </div>
+</section>
+
+		
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+</body>
+</html>
