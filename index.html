@@ -186,7 +186,7 @@
 // Hlavní funkce - mozek celého programu
 int main() {
 	// printf vypisuje text. \n vytvoří nový řádek.
-	printf("Ahoj, toto je můj první program v C!\n");
+	printf("Ahoj, toto je muj prvni program v C!\n");
 
 	// return 0 říká systému: "Vše proběhlo v pořádku."
 	return 0;
@@ -246,8 +246,26 @@ int main() {
             <td style="padding: 10px;"><code>%lf</code></td>
         </tr>
     </table>
-
-    
+	
+	<h3>Operátor sizeof</h3>
+    <p>
+        Jelikož se velikost typů (jako <code>int</code>) může na různých procesorech lišit, používáme operátor <strong>sizeof</strong>. 
+    </p>
+    <ul>
+        <li><strong>Co dělá:</strong> Vrací velikost typu nebo proměnné v <strong>bajtech</strong>.</li>
+        <li><strong>Typ výsledku:</strong> Vrací <code>size_t</code> (nezáporné číslo).</li>
+        <li><strong>Značka v printf:</strong> Pro výpis můžeme použít specifickou značku <code>%zu</code>.</li>
+    </ul>
+	
+	<h3>Co je to size_t?</h3>
+    <p>
+        Typ <code>size_t</code> je speciální nezáporný celočíselný typ definovaný v C. Je navržen tak, aby dokázal pojmout <strong>maximální teoretickou velikost</strong> jakéhokoliv objektu (pole, struktury), který se vejde do operační paměti vašeho počítače.
+    </p>
+    <ul>
+        <li><strong>Bezpečnost:</strong> Na rozdíl od <code>int</code> nemůže být nikdy záporný.</li>
+        <li><strong>Adaptabilita:</strong> Na 32-bitovém systému má 4 bajty, na 64-bitovém má 8 bajtů.</li>
+        <li><strong>Využití:</strong> Je to standardní typ pro indexování polí, cykly pracující s pamětí a výsledky operátoru <code>sizeof</code>.</li>
+    </ul>
 
     <h3>2. Formátovací značky v printf</h3>
     <p>
@@ -271,10 +289,10 @@ int main() {
     uint32_t ip_adresa = 0xC0A80101; // Hexadecimální zápis
 
     // Výpis s různým formátováním
-    printf("Věk: %u let\n", vek);
+    printf("Vek: %u let\n", vek);
     
     // Omezení desetinných míst na 2
-    printf("Váha: %.2f kg\n", vaha);
+    printf("Vaha: %.2f kg\n", vaha);
     
     // Výpis stejného čísla desítkově a šestnáctkově
     printf("IP (dec): %u\n", ip_adresa);
@@ -308,13 +326,13 @@ int main() {
     int skore = 85;
 
     if (skore >= 90) {
-        printf("Výborně, máš jedničku!\n");
+        printf("Vyborne, mas jednicku!\n");
     } 
     else if (skore >= 80) {
-        printf("Skvěle, máš dvojku.\n");
+        printf("Skvele, mas dvojku.\n");
     } 
     else {
-        printf("Musíš víc trénovat.\n");
+        printf("Musis vic trenovat.\n");
     }
 
     return 0;
@@ -339,16 +357,16 @@ int main() {
 
     switch (volba) {
         case 1:
-            printf("Spouštím novou hru...\n");
+            printf("Spoustim novou hru...\n");
             break;
         case 2:
-            printf("Načítám uloženou pozici...\n");
+            printf("Nacitam pozici...\n");
             break;
         case 3:
-            printf("Končím program.\n");
+            printf("Koncim program.\n");
             break;
         default:
-            printf("Neplatná volba!\n");
+            printf("Neplatna volba!\n");
     }
 
     return 0;
@@ -380,7 +398,7 @@ int main() {
     </p>
     <pre><code class="language-c">int i = 0;
 while (i < 3) {
-    printf("i je nyní: %d\n", i);
+    printf("i je: %d\n", i);
     i++; // Důležité: musíme i zvětšit, jinak cyklus nikdy neskončí!
 }</code></pre>
 
@@ -391,7 +409,7 @@ while (i < 3) {
     </p>
     <pre><code class="language-c">// for(start; podmínka; krok)
 for (int i = 0; i < 5; i++) {
-    printf("Ahoj z cyklu for, číslo %d\n", i);
+    printf("Ahoj z cyklu for, i: %d\n", i);
 }</code></pre>
 
     
@@ -410,7 +428,7 @@ for (int i = 0; i < 5; i++) {
     </div>
     <pre><code class="language-c">int j = 10;
 do {
-    printf("Tento text uvidíš aspoň jednou, i když j není menší než 5.\n");
+    printf("Text uvidis jednou 5.\n");
     j++;
 } while (j < 5);</code></pre>
 
@@ -449,7 +467,7 @@ int secti_cisla(int a, int b);
 int main() {
     // Volání funkce
     int vysledek = secti_cisla(10, 20);
-    printf("Součet je: %d\n", vysledek);
+    printf("Soucet je: %d\n", vysledek);
     
     return 0;
 }
@@ -503,7 +521,7 @@ void vymen_hodnotu(int *p_cislo) {
 int main() {
     int moje_cislo = 10;
     
-    printf("Před funkcí: %d\n", moje_cislo);
+    printf("Pred funkcí: %d\n", moje_cislo);
 
     // Volání funkce - musíme poslat ADRESU pomocí operátoru &
     vymen_hodnotu(&moje_cislo);
@@ -619,13 +637,13 @@ int main() {
     Hrac *ptr_hrac = &h1;
 
     // Přístup přes tečku
-    printf("Hráč: %s (Level %d)\n", h1.jmeno, h1.uroven);
+    printf("Hrac: %s (Level %d)\n", h1.jmeno, h1.uroven);
 
     // Změna hodnoty přes šipku (protože ptr_hrac je pointer)
     ptr_hrac->uroven = 6;
     ptr_hrac->zdravi = 95.5f;
 
-    printf("Aktualizovaný level: %d\n", h1.uroven);
+    printf("Aktualizovany level: %d\n", h1.uroven);
 
     return 0;
 }</code></pre>
@@ -652,7 +670,7 @@ int main() {
     enum StavHry aktualni = MENU;
 
     if (aktualni == MENU) {
-        printf("Zobrazuji hlavní menu...\n");
+        printf("Zobrazuji hlavni menu...\n");
     }
     return 0;
 }</code></pre>
@@ -687,7 +705,7 @@ int main() {
     printf("Float: %.2f\n", data.desetinne_cislo);
     
     // Tady už bude nesmysl, protože místo bylo přepsáno floatem
-    printf("Int po přepsání: %d\n", data.cele_cislo); 
+    printf("Int po prepsani: %d\n", data.cele_cislo); 
 
     return 0;
 }</code></pre>
@@ -745,7 +763,7 @@ int main() {
         printf("[DEBUG] Hodnota x je: %d\n", x);
     #endif
 
-    printf("Program běží...\n");
+    printf("Program beziii...\n");
 
     return 0;
 }</code></pre>
@@ -791,7 +809,7 @@ int main() {
 
 int main() {
     int n;
-    printf("Kolik čísel chceš uložit? ");
+    printf("Kolik cisel? ");
     scanf("%d", &n);
 
     // 1. Alokace paměti: chceme n-krát velikost typu int
@@ -799,7 +817,7 @@ int main() {
 
     // 2. Kontrola, zda se alokace povedla (paměť může dojít!)
     if (pole == NULL) {
-        printf("Chyba: Nedostatek paměti!\n");
+        printf("Chyba: Nedostatek pameti!\n");
         return 1;
     }
 
@@ -869,7 +887,7 @@ int secti(int a, int b) {
 
 int main() {
     int vysledek = secti(5, 10);
-    printf("Výsledek z jiného souboru: %d\n", vysledek);
+    printf("Vysledek : %d\n", vysledek);
     return 0;
 }</code></pre>
 
